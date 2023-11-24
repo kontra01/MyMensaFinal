@@ -1,3 +1,4 @@
 # mymensa
 
-A new Flutter project.
+
+My Mensa - the cafeteria planner.
