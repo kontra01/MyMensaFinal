@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MyMensaHome());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyMensaHome extends StatelessWidget {
+  const MyMensaHome({super.key});
 
   @override
   Widget build(BuildContext context) {
