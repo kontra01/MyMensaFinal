@@ -1,19 +1,44 @@
 import 'package:flutter/material.dart';
+import 'widgets/footer.dart';
+import 'widgets/containerTest.dart';
 
 void main() {
-  runApp(const MyMensaHome());
+  runApp(const MyMensa());
 }
 
-class MyMensaHome extends StatelessWidget {
-  const MyMensaHome({super.key});
+final ButtonStyle headerButton =
+    ElevatedButton.styleFrom(minimumSize: const Size.fromWidth(60.0));
+
+class MyMensa extends StatelessWidget {
+  const MyMensa({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
+        appBar: AppBar(
+          title: const Row(
+            children: [
+              FlutterLogo(),
+              SizedBox(width: 10.0),
+              Text('MyMensa'),
+            ],
+          ),
+          actions: [
+            IconButton(
+              style: headerButton,
+              icon: const Icon(Icons.settings),
+              onPressed: () {},
+            ),
+            IconButton(
+              style: headerButton,
+              icon: const Icon(Icons.person),
+              onPressed: () {},
+            ),
+          ],
         ),
+        body: const Container1(),
+        bottomNavigationBar: const FooterWidget(),
       ),
     );
   }
