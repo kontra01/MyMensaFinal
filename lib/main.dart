@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'widgets/footer.dart';
 import 'widgets/containerTest.dart';
 
+// main color: 0xff94c11f
+
 void main() {
   runApp(const MyMensa());
 }
 
-final ButtonStyle headerButton =
-    ElevatedButton.styleFrom(minimumSize: const Size.fromWidth(60.0));
+final ButtonStyle headerButton = ElevatedButton.styleFrom(
+  minimumSize: const Size.fromWidth(60.0),
+);
+
+void changeContainer(StatelessWidget newContainer) {
+  return;
+}
 
 class MyMensa extends StatelessWidget {
   const MyMensa({Key? key}) : super(key: key);
@@ -17,11 +24,15 @@ class MyMensa extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Row(
+          backgroundColor: const Color(0xaa94c11f),
+          title: Row(
             children: [
-              FlutterLogo(),
-              SizedBox(width: 10.0),
-              Text('MyMensa'),
+              Image.asset(
+                'assets/logo/4xtransparent/mymensa4@4x.png',
+                height: 25.0,
+              ),
+              const SizedBox(width: 10.0),
+              const Text('MyMensa'),
             ],
           ),
           actions: [
