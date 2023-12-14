@@ -25,7 +25,8 @@ String dateToString(DateTime d, int focus) {
 }
 
 class _Container1State extends State<Container1> {
-  late int selectedDay = 0;
+  late int selectedDay;
+  late int closestIndex;
   late DateTime date;
   int dateFocus = 0; // day = 0; month = 1; year = 2;
   late PageController controller = PageController(initialPage: selectedDay);
@@ -37,6 +38,12 @@ class _Container1State extends State<Container1> {
     myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 18), [meals[1]]));
     myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 19), [meals[2]]));
     myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]));
+    closestIndex = myMensaPlan.getClosestFutureDay();
+    selectedDay = myMensaPlan.days[0].date
+        .difference(myMensaPlan.days[closestIndex].date)
+        .inDays;
+    date = myMensaPlan.days[closestIndex].date;
+
     super.initState();
   }
 
@@ -62,20 +69,54 @@ class _Container1State extends State<Container1> {
                 });
               },
               itemBuilder: (context, index) {
-                return Container(
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: Text(
-                      'Content for Day $index',
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ),
-                );
+                return DayContainer(day: myMensaPlan.days[index]);
               },
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class DayContainer extends StatelessWidget {
+  final Day day;
+
+  const DayContainer({super.key, required this.day});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          dateToString(day.date, 0),
+          style: const TextStyle(fontSize: 24),
+        ),
+        ListView.builder(
+          itemCount: day.meals.length,
+          itemBuilder: (context, mealIndex) {
+            Meal meal = day.meals[mealIndex];
+            return ListTile(
+              title: Text(meal.name),
+              subtitle: Text('Preis: ${meal.price}, Sterne: ${meal.rating}'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.star),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
