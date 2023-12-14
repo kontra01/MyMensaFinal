@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'variables.dart';
 
 final ButtonStyle footerButton = ElevatedButton.styleFrom(
-    backgroundColor: Colors.white,
+    backgroundColor: MyMensaStyle.main,
     foregroundColor: Colors.black,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.zero,

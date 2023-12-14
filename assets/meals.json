@@ -1,0 +1,32 @@
+{
+    "meals": [
+    {
+      "id": 1,
+      "name": "Reis",
+      "price": 5.99,
+      "rating": 4.5
+    },
+    {
+      "id": 2,
+      "name": "Gyros",
+      "price": 8.99,
+      "rating": 4.8
+    },
+    {
+      "id": 3,
+      "name": "Fisch",
+      "price": 4.99
+    },
+    {
+      "id": 4,
+      "name": "Bohnensuppe",
+      "price": 10.99,
+      "rating": 4.7
+    },
+    {
+      "id": 5,
+      "name": "Salat",
+      "price": 6.99,
+      "rating": 4.2
+    }]
+}

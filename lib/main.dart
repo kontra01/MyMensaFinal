@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'widgets/footer.dart';
-import 'widgets/containerTest.dart';
-
-// main color: 0xff94c11f
+import 'widgets/mainview.dart';
+import 'widgets/variables.dart';
 
 void main() {
   runApp(const MyMensa());
@@ -17,14 +16,14 @@ void changeContainer(StatelessWidget newContainer) {
 }
 
 class MyMensa extends StatelessWidget {
-  const MyMensa({Key? key}) : super(key: key);
+  const MyMensa({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xaa94c11f),
+          backgroundColor: MyMensaStyle.main,
           title: Row(
             children: [
               Image.asset(
