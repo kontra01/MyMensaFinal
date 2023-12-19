@@ -25,25 +25,35 @@ String dateToString(DateTime d, int focus) {
 }
 
 class _Container1State extends State<Container1> {
-  late int selectedDay;
-  late int closestIndex;
-  late DateTime date;
+  late int selection; // variable that determines which slide the user is on
+  late int change;
+  //
+
+  late DateTime date; // current date. this is just helpful
+
   int dateFocus = 0; // day = 0; month = 1; year = 2;
-  late PageController controller = PageController(initialPage: selectedDay);
+
+  late PageController controller =
+      PageController(initialPage: selection); // for the sliding effect
 
   @override
   void initState() {
-    myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 14), [meals[0]]));
-    myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 15), [meals[3]]));
-    myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 18), [meals[1]]));
-    myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 19), [meals[2]]));
-    myMensaPlan.addDay(Day(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]));
-    closestIndex = myMensaPlan.getClosestFutureDay();
-    selectedDay = myMensaPlan.days[0].date
-        .difference(myMensaPlan.days[closestIndex].date)
-        .inDays;
-    date = myMensaPlan.days[closestIndex].date;
+    myMensaPlan.addDay(DateTime.utc(2023, 12, 14), [meals[0]]);
+    myMensaPlan.addDay(DateTime.utc(2023, 12, 15), [meals[3]]);
+    myMensaPlan.addDay(DateTime.utc(2023, 12, 18), [meals[1]]);
+    myMensaPlan.addDay(DateTime.utc(2023, 12, 19), [meals[2]]);
+    myMensaPlan.addDay(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]);
 
+    DateTime date = DateTime.now().toUtc();
+    DateTime t = myMensaPlan.dateMap.getDate(0)!;
+
+    if (!myMensaPlan.dateMap.indices.isEmpty &&
+        date.isBefore(myMensaPlan.dateMap.getDate(0)!)) {
+      myMensaPlan.dateMap.expand(date.difference(t).inDays);
+    }
+
+    selection = 0;
+    change = 0;
     super.initState();
   }
 
@@ -57,66 +67,54 @@ class _Container1State extends State<Container1> {
         children: [
           Expanded(
             child: PageView.builder(
-              controller: controller,
-              onPageChanged: (index) {
-                setState(() {
-                  int change = index - selectedDay;
-                  date = DateTime(
-                      dateFocus == 2 ? date.year + change : date.year,
-                      dateFocus == 1 ? date.month + change : date.month,
-                      dateFocus == 0 ? date.day + change : date.day);
-                  selectedDay = index;
-                });
-              },
-              itemBuilder: (context, index) {
-                return DayContainer(day: myMensaPlan.days[index]);
-              },
-            ),
-          ),
+                controller: controller,
+                onPageChanged: (index) {
+                  setState(() {
+                    change = index - selection;
+                    date = DateTime(
+                        dateFocus == 2 ? date.year + change : date.year,
+                        dateFocus == 1 ? date.month + change : date.month,
+                        dateFocus == 0 ? date.day + change : date.day);
+                    selection = index;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  List<Meal>? currentMeals =
+                      myMensaPlan.dateMap.getEntry(index);
+                  if (currentMeals == null)
+                    return Text("No meals entered for this date.");
+                  return ListView.builder(
+                    itemCount: currentMeals.length,
+                    itemBuilder: (context, jndex) {
+                      Meal meal = currentMeals[jndex];
+                      return ListTile(
+                          title: Text(meal.name),
+                          subtitle: Text(meal.getSubtitle()),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                // Edit button
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  // TODO: create plan and interface for editing.
+                                },
+                              ),
+                              IconButton(
+                                // Rate button
+                                icon: const Icon(Icons.star),
+                                onPressed: () {
+                                  // TODO: rate from 1 to ten.
+                                },
+                              )
+                            ],
+                          ));
+                    },
+                  );
+                }),
+          )
         ],
       ),
-    );
-  }
-}
-
-class DayContainer extends StatelessWidget {
-  final Day day;
-
-  const DayContainer({super.key, required this.day});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          dateToString(day.date, 0),
-          style: const TextStyle(fontSize: 24),
-        ),
-        ListView.builder(
-          itemCount: day.meals.length,
-          itemBuilder: (context, mealIndex) {
-            Meal meal = day.meals[mealIndex];
-            return ListTile(
-              title: Text(meal.name),
-              subtitle: Text('Preis: ${meal.price}, Sterne: ${meal.rating}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.star),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
     );
   }
 }
