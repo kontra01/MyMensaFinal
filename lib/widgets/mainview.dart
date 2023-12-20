@@ -43,16 +43,16 @@ class _Container1State extends State<Container1> {
     myMensaPlan.addDay(DateTime.utc(2023, 12, 18), [meals[1]]);
     myMensaPlan.addDay(DateTime.utc(2023, 12, 19), [meals[2]]);
     myMensaPlan.addDay(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]);
-
-    DateTime date = DateTime.now().toUtc();
     DateTime t = myMensaPlan.dateMap.getDate(0)!;
 
-    if (!myMensaPlan.dateMap.indices.isEmpty &&
-        date.isBefore(myMensaPlan.dateMap.getDate(0)!)) {
-      myMensaPlan.dateMap.expand(date.difference(t).inDays);
-    }
+    /// TODO: make it skip to the first day in the future which has entered meal.
+    date = DateTime.now().toUtc();
 
-    selection = 0;
+    selection = date.difference(t).inDays;
+    if (myMensaPlan.dateMap.indices.isNotEmpty &&
+        date.isBefore(myMensaPlan.dateMap.getDate(0)!)) {
+      myMensaPlan.dateMap.expand(-selection);
+    }
     change = 0;
     super.initState();
   }
@@ -81,8 +81,9 @@ class _Container1State extends State<Container1> {
                 itemBuilder: (context, index) {
                   List<Meal>? currentMeals =
                       myMensaPlan.dateMap.getEntry(index);
-                  if (currentMeals == null)
+                  if (currentMeals == null) {
                     return Text("No meals entered for this date.");
+                  }
                   return ListView.builder(
                     itemCount: currentMeals.length,
                     itemBuilder: (context, jndex) {

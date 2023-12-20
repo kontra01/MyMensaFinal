@@ -8,20 +8,21 @@ class DateMap<EntryType> {
   void add(DateTime date, EntryType entry) {
     date = date.toUtc();
     map[date] = entry;
-    if (indices.isEmpty) {
+    int? i0 = this.getUpperNonNull(-1);
+    if (indices.isEmpty || i0 == null) {
       indices.add(date);
       return;
     }
 
-    // TODO: convert all to insert for shorter algorithm
-    int gapToBase = date.difference(indices[0]!).inDays;
-    if (indices[0]!.isBefore(date)) {
-      indices.insertAll(
-          0, List<DateTime?>.generate(gapToBase - 1, (i) => null));
+    DateTime di = indices[i0]!;
+    DateTime d0 = DateTime(di.year, di.month, di.day - i0);
+    int gapToBase = date.difference(d0).inDays;
+
+    if (d0.isAfter(date)) {
+      this.expand(-gapToBase + 1);
       indices.insert(0, date);
-    } else if (indices[indices.length - 1]!.isAfter(date)) {
-      indices.addAll(List<DateTime?>.generate(
-          gapToBase - indices.length - 2, (i) => null));
+    } else if (gapToBase >= indices.length) {
+      this.expand(gapToBase - 1);
       indices.add(date);
     } else {
       indices[gapToBase] = date;
@@ -36,12 +37,20 @@ class DateMap<EntryType> {
 
   /// Returns [DateTime] for provided [index]. If [DateTime] is not added for [index] yet, null is returned.
   DateTime? getDate(int index) {
-    return indices[index];
+    try {
+      return indices[index];
+    } on IndexError {
+      return null;
+    }
   }
 
   /// Returns [EntryType] through redirection for provided [index]. If [DateTime] or [EntryType] for that is not added for [index] yet, null is returned.
   EntryType? getEntry(int index) {
-    return map[indices[index]!];
+    try {
+      return map[indices[index]];
+    } on IndexError {
+      return null;
+    }
   }
 
   /// Returns tuple of [DateTime] and [EntryType] for provided [index]. Either parts can be null, if not added yet.
@@ -50,9 +59,8 @@ class DateMap<EntryType> {
     return (date, map[date]);
   }
 
-  /// Gets first item for
   int? getUpperNonNull(int index) {
-    if (index <= 0 || indices.length < index) return null;
+    if (indices.isEmpty || indices.length < index + 1) return null;
     for (int j = index + 1; j < indices.length; j++) {
       if (indices[j] != null) return j;
     }
@@ -68,7 +76,7 @@ class DateMap<EntryType> {
   }
 
   void expand(int index) {
-    int expansion = index - indices.length - 1;
+    int expansion = index - indices.length + 1;
     if (expansion == 0 || expansion.abs() < indices.length) return;
     indices.insertAll(index < 0 ? 0 : indices.length,
         List<DateTime?>.generate(expansion.abs(), (i) => null));
