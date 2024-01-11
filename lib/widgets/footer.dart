@@ -9,8 +9,12 @@ final ButtonStyle footerButton = ElevatedButton.styleFrom(
     ),
     minimumSize: const Size.fromHeight(double.infinity));
 
+// ignore: must_be_immutable
 class FooterWidget extends StatelessWidget {
-  const FooterWidget({super.key});
+  late var changeContainer;
+  late var getIndex;
+
+  FooterWidget(this.changeContainer, this.getIndex, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +24,20 @@ class FooterWidget extends StatelessWidget {
         children: [
           Expanded(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                if (this.getIndex == 0) return;
+                changeContainer(0);
+              },
               style: footerButton,
               child: const Icon(Icons.search),
             ),
           ),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                if (this.getIndex == 1) return;
+                changeContainer(1);
+              },
               style: footerButton,
               child: const Icon(Icons.today),
             ),

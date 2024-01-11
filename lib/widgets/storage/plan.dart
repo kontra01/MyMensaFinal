@@ -8,14 +8,12 @@ class DateMap<EntryType> {
   void add(DateTime date, EntryType entry) {
     date = date.toUtc();
     map[date] = entry;
-    int? i0 = this.getUpperNonNull(-1);
-    if (indices.isEmpty || i0 == null) {
+    DateTime? d0 = getDate0();
+    if (d0 == null) {
       indices.add(date);
       return;
     }
 
-    DateTime di = indices[i0]!;
-    DateTime d0 = DateTime(di.year, di.month, di.day - i0);
     int gapToBase = date.difference(d0).inDays;
 
     if (d0.isAfter(date)) {
@@ -28,6 +26,19 @@ class DateMap<EntryType> {
       indices[gapToBase] = date;
       return;
     }
+  }
+
+  DateTime? getDate0([int? index]) {
+    if (indices.isEmpty) return null;
+    if (index != null && indices[index] != null) {
+      return indices[index];
+    } else if (index == null && indices[0] != null) {
+      return indices[0];
+    }
+    int? iX = this.getUpperNonNull(-1);
+    if (iX == null) return null;
+    DateTime dX = indices[iX]!;
+    return DateTime(dX.year, dX.month, dX.day - iX + (index ?? 0)).toUtc();
   }
 
   /// Returns [EntryType] for provided [DateTime]. If [EntryType] is not added for [DateTime] yet, null is returned.
@@ -62,6 +73,7 @@ class DateMap<EntryType> {
   int? getUpperNonNull(int index) {
     if (indices.isEmpty || indices.length < index + 1) return null;
     for (int j = index + 1; j < indices.length; j++) {
+      print(j);
       if (indices[j] != null) return j;
     }
     return null;
@@ -99,14 +111,20 @@ class Plan {
     }
   }
 
-  ///
-  int getClosestFutureDay() {
-    DateTime now = DateTime.now().toUtc();
-    DateTime? base = dateMap.getDate(0);
-    if (base == null) return 0;
-    int baseDiff = base.difference(now).inDays;
-    int? upperNonNull = dateMap.getUpperNonNull(baseDiff);
-    if (now.isBefore(base)) baseDiff *= -1;
-    return now.isBefore(base) ? 0 : (upperNonNull ?? baseDiff);
+  int getClosestFutureDay(DateTime date) {
+    date = date.toUtc();
+    DateTime? d0 = dateMap.getDate0();
+    if (d0 == null) return 0;
+    print(d0);
+    print(date);
+    int iD = date.difference(d0).inDays;
+    if (iD < 0 || iD >= dateMap.indices.length) {
+      dateMap.expand(iD);
+      print(dateMap.indices);
+      return iD;
+    }
+    print(iD);
+    int? upperNonNull = dateMap.getUpperNonNull(iD);
+    return upperNonNull ?? iD;
   }
 }
