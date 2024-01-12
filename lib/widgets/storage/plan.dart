@@ -55,6 +55,26 @@ class DateMap<EntryType> {
     }
   }
 
+  DateTime getAccountedDate(int index) {
+    DateTime? d = getDate(index);
+    if (d != null) {
+      return d;
+    }
+    DateTime? d0 = getDate0();
+    if (d0 == null) {
+      return DateTime.now();
+    }
+    return DateTime(d0.year, d0.month, d0.day + index);
+  }
+
+  int getIndex(DateTime date) {
+    DateTime? d0 = getDate0();
+    if (d0 == null) {
+      return 0;
+    }
+    return date.toUtc().difference(d0).inDays;
+  }
+
   /// Returns [EntryType] through redirection for provided [index]. If [DateTime] or [EntryType] for that is not added for [index] yet, null is returned.
   EntryType? getEntry(int index) {
     try {
@@ -73,7 +93,6 @@ class DateMap<EntryType> {
   int? getUpperNonNull(int index) {
     if (indices.isEmpty || indices.length < index + 1) return null;
     for (int j = index + 1; j < indices.length; j++) {
-      print(j);
       if (indices[j] != null) return j;
     }
     return null;
@@ -112,19 +131,11 @@ class Plan {
   }
 
   int getClosestFutureDay(DateTime date) {
-    date = date.toUtc();
-    DateTime? d0 = dateMap.getDate0();
-    if (d0 == null) return 0;
-    print(d0);
-    print(date);
-    int iD = date.difference(d0).inDays;
-    if (iD < 0 || iD >= dateMap.indices.length) {
+    int iD = dateMap.getIndex(date);
+    if (iD < 0) {
       dateMap.expand(iD);
-      print(dateMap.indices);
-      return iD;
+      iD = 0;
     }
-    print(iD);
-    int? upperNonNull = dateMap.getUpperNonNull(iD);
-    return upperNonNull ?? iD;
+    return dateMap.getUpperNonNull(iD) ?? iD;
   }
 }

@@ -37,6 +37,7 @@ String dateToString(DateTime d, int focus) {
 class _Container1State extends State<Container1> {
   late int selection; // variable that determines which slide the user is on
   late int change;
+  late DateMap dm;
 
   late DateTime date; // current date. this is just helpful
 
@@ -52,23 +53,15 @@ class _Container1State extends State<Container1> {
     myMensaPlan.addDay(DateTime.utc(2023, 12, 18), [meals[1]]);
     myMensaPlan.addDay(DateTime.utc(2023, 12, 19), [meals[2]]);
     myMensaPlan.addDay(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]);
-    DateTime? t0 = myMensaPlan.dateMap.getDate0();
-    DateTime now = DateTime.now().toUtc();
-    int futureIndex = myMensaPlan.getClosestFutureDay(now);
-    date = myMensaPlan.dateMap.getDate(futureIndex)!;
-    selection = now.difference(t0 ?? now).inDays;
+    dm = myMensaPlan.dateMap;
+    int futureIndex = myMensaPlan.getClosestFutureDay(DateTime.now());
+    date = dm.getAccountedDate(futureIndex);
+    selection = futureIndex;
 
     controller = PageController(initialPage: selection);
-
-    if (myMensaPlan.dateMap.indices.isNotEmpty &&
-        t0 != null &&
-        date.isBefore(t0)) {
-      myMensaPlan.dateMap.expand(-selection);
-    }
-    selection = date.difference(t0 ?? date).inDays;
     Future.delayed(Duration(milliseconds: 200 * selection), () {
       controller.animateToPage(selection,
-          duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+          duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
     });
 
     change = 0;
