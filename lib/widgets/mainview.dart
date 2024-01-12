@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import "storage/plan.dart";
 import "storage/meal.dart";
 
-Plan myMensaPlan = Plan();
+Plan mymp = Plan();
 List<Meal> meals = [
   Meal("Gyros", 7, 3.2),
   Meal("Reis", 2, 2.8),
@@ -37,7 +37,6 @@ String dateToString(DateTime d, int focus) {
 class _Container1State extends State<Container1> {
   late int selection; // variable that determines which slide the user is on
   late int change;
-  late DateMap dm;
 
   late DateTime date; // current date. this is just helpful
 
@@ -48,14 +47,13 @@ class _Container1State extends State<Container1> {
   @override
   void initState() {
     super.initState();
-    myMensaPlan.addDay(DateTime.utc(2023, 12, 14), [meals[0]]);
-    myMensaPlan.addDay(DateTime.utc(2023, 12, 15), [meals[3]]);
-    myMensaPlan.addDay(DateTime.utc(2023, 12, 18), [meals[1]]);
-    myMensaPlan.addDay(DateTime.utc(2023, 12, 19), [meals[2]]);
-    myMensaPlan.addDay(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]);
-    dm = myMensaPlan.dateMap;
-    int futureIndex = myMensaPlan.getClosestFutureDay(DateTime.now());
-    date = dm.getAccountedDate(futureIndex);
+    mymp.addDay(DateTime.utc(2023, 12, 14), [meals[0]]);
+    mymp.addDay(DateTime.utc(2023, 12, 15), [meals[3]]);
+    mymp.addDay(DateTime.utc(2023, 12, 18), [meals[1]]);
+    mymp.addDay(DateTime.utc(2023, 12, 19), [meals[2]]);
+    mymp.addDay(DateTime.utc(2023, 12, 20), [meals[3], meals[2]]);
+    int futureIndex = mymp.getClosestFutureDay(DateTime.now());
+    date = mymp.getAccountedDate(futureIndex);
     selection = futureIndex;
 
     controller = PageController(initialPage: selection);
@@ -89,8 +87,7 @@ class _Container1State extends State<Container1> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  List<Meal>? currentMeals =
-                      myMensaPlan.dateMap.getEntry(index);
+                  List<Meal>? currentMeals = mymp.getEntry(index);
                   if (currentMeals == null) {
                     return Text("No meals entered for this date.");
                   }
