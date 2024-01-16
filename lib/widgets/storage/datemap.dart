@@ -1,119 +1,166 @@
-import "dart:collection";
-
 import "package:isar/isar.dart";
 
-class MensaDay extends DateTime {
-  late Id mealId;
-  MensaDay(super.year, super.month, super.day);
+// MAHLZEIT!
+class MealType {
+  Id id = Isar.autoIncrement;
+  String name;
+  int hours;
+  int minutes;
+  List<Id> mealIds;
+  int typus;
+  MealType(this.name, this.mealIds, this.typus, this.hours, this.minutes);
+  int totalMinutes() => hours * 60 + minutes;
+  double totalHours() => hours + minutes / 60;
+  bool isBefore(MealType mt) => totalMinutes() < mt.totalMinutes();
+  bool isAtSameTime(MealType mt) => totalMinutes() == mt.totalMinutes();
+  bool isAfter(MealType mt) => totalMinutes() > mt.totalMinutes();
 }
 
-class DateMap<DateType> {
-  List<DateType?> indices = [];
+// a day with different types of MAHLZEITEN
+class MensaDay {
+  Id id = Isar.autoIncrement;
+  List<MealType> mealTypes = [];
+  DateTime date;
+  MensaDay(this.date, {this.mealTypes = const []});
+  void add(MealType mt) {
+    for (int i = 0; i < mealTypes.length; i++) {
+      if (mt.isBefore(mealTypes[i])) {
+        mealTypes.insert(i, mt);
+        return;
+      }
+    }
+    mealTypes.add(mt);
+  }
 
-  void add(DateTime date, DateType entry) {
+  void toUtc() {
     date = date.toUtc();
-    DateTime? d0 = getDate0();
-    if (d0 == null) {
-      indices.add(date);
-      return;
+  }
+}
+/*
+class DateMap {
+  DateTime? date0;
+
+  final List<DateTime?> _indices = [];
+
+  void add(DateTime date) {
+    date = date.toUtc();
+
+    int thrIndex = getAccountedIndex(date);
+
+    if (thrIndex < 0) {
+      expand(-thrIndex + 1);
+
+      thrIndex = 0;
     }
 
-    int gapToBase = date.difference(d0).inDays;
+    if (thrIndex == 0) {
+      _indices.insert(0, date);
 
-    if (d0.isAfter(date)) {
-      this.expand(-gapToBase + 1);
-      indices.insert(0, date);
-    } else if (gapToBase >= indices.length) {
-      this.expand(gapToBase - 1);
-      indices.add(date);
+      date0 = date;
+
+      return;
+    } else if (thrIndex >= _indices.length) {
+      expand(thrIndex - 1);
+
+      _indices.add(date);
     } else {
-      indices[gapToBase] = date;
+      _indices[thrIndex] = date;
+
       return;
     }
   }
 
+  /*
   DateTime? getDate0([int? index]) {
-    if (indices.isEmpty) return null;
-    if (index != null && indices[index] != null) {
-      return indices[index];
-    } else if (index == null && indices[0] != null) {
-      return indices[0];
+    if (_indices.isEmpty) return null;
+
+    if (index != null && _indices[index] != null) {
+      return _indices[index];
+    } else if (index == null && _indices[0] != null) {
+      return _indices[0];
     }
+
     int? iX = this.getUpperNonNull(-1);
+
     if (iX == null) return null;
-    DateTime dX = indices[iX]!;
+
+    DateTime dX = _indices[iX]!;
+
     return DateTime(dX.year, dX.month, dX.day - iX + (index ?? 0)).toUtc();
   }
-
-  /// Returns [EntryType] for provided [DateTime]. If [EntryType] is not added for [DateTime] yet, null is returned.
-  EntryType? operator [](DateTime date) {
-    return map[date];
-  }
+  */
 
   /// Returns [DateTime] for provided [index]. If [DateTime] is not added for [index] yet, null is returned.
-  DateTime? getDate(int index) {
-    try {
-      return indices[index];
-    } on IndexError {
-      return null;
+
+  DateTime? operator [](int index) {
+    return index < 0 || index > _indices.length ? null : _indices[index];
+  }
+
+  /// Returns [DateTime] for provided [DateTime]. If [DateTime] is not added for [DateTime] yet, null is returned.
+
+  DateTime? getDate(DateTime date) {
+    date = date.toUtc();
+    for (int i = 0; i < _indices.length; i++) {
+      if (DateUtils.isSameDay(_indices[i], date)) return _indices[i];
     }
+    return null;
   }
 
   DateTime getAccountedDate(int index) {
-    DateTime? d = getDate(index);
-    if (d != null) {
-      return d;
+    if (this[index] != null) {
+      return this[index]!;
     }
-    DateTime? d0 = getDate0();
-    if (d0 == null) {
-      return DateTime.now();
-    }
-    return DateTime(d0.year, d0.month, d0.day + index);
+
+    return date0 == null
+        ? DateTime.now().toUtc()
+        : DateTime(date0!.year, date0!.month, date0!.day + index);
   }
 
-  int getIndex(DateTime date) {
-    DateTime? d0 = getDate0();
-    if (d0 == null) {
-      return 0;
+  int? getIndex(DateTime date) {
+    date = date.toUtc();
+    for (int i = 0; i < _indices.length; i++) {
+      if (DateUtils.isSameDay(_indices[i], date)) return i;
     }
-    return date.toUtc().difference(d0).inDays;
+    return null;
   }
 
-  /// Returns [EntryType] through redirection for provided [index]. If [DateTime] or [EntryType] for that is not added for [index] yet, null is returned.
-  EntryType? getEntry(int index) {
-    try {
-      return map[indices[index]];
-    } on IndexError {
-      return null;
-    }
-  }
+  int getAccountedIndex(DateTime date) {
+    if (date0 == null) return 0;
 
-  /// Returns tuple of [DateTime] and [EntryType] for provided [index]. Either parts can be null, if not added yet.
-  (DateTime?, EntryType?) of(int index) {
-    DateTime? date = getDate(index);
-    return (date, map[date]);
+    return date.toUtc().difference(date0!).inDays;
   }
 
   int? getUpperNonNull(int index) {
-    if (indices.isEmpty || indices.length < index + 1) return null;
-    for (int j = index + 1; j < indices.length; j++) {
-      if (indices[j] != null) return j;
+    if (_indices.isEmpty || _indices.length < index + 1) return null;
+
+    for (int j = index + 1; j < _indices.length; j++) {
+      if (_indices[j] != null) return j;
     }
+
     return null;
   }
 
   int? getLowerNonNull(int index) {
-    if (index <= 0 || indices.isEmpty) return null;
+    if (index <= 0 || _indices.isEmpty) return null;
+
     for (int j = index - 1; j >= 0; j--) {
-      if (indices[j] != null) return j;
+      if (_indices[j] != null) return j;
     }
+
     return null;
   }
 
   void expand(int index) {
-    int expansion = index - indices.length + 1;
-    if (expansion == 0 || expansion.abs() < indices.length) return;
-    indices.insertAll(index < 0 ? 0 : indices.length,
+    int expansion = index - _indices.length + 1;
+
+    if (expansion >= 0 && expansion < _indices.length) return;
+
+    if (index < 0 && date0 != null) {
+      date0 = DateTime(date0!.year, date0!.month, date0!.day + index);
+    }
+
+    _indices.insertAll(index < 0 ? 0 : _indices.length,
         List<DateTime?>.generate(expansion.abs(), (i) => null));
   }
 }
+*/

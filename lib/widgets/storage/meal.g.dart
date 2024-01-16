@@ -17,25 +17,50 @@ const MealSchema = CollectionSchema(
   name: r'Meal',
   id: 2462895270179255875,
   properties: {
-    r'description': PropertySchema(
+    r'dairyfree': PropertySchema(
       id: 0,
+      name: r'dairyfree',
+      type: IsarType.bool,
+    ),
+    r'description': PropertySchema(
+      id: 1,
       name: r'description',
       type: IsarType.string,
     ),
+    r'glutenfree': PropertySchema(
+      id: 2,
+      name: r'glutenfree',
+      type: IsarType.bool,
+    ),
     r'name': PropertySchema(
-      id: 1,
+      id: 3,
       name: r'name',
       type: IsarType.string,
     ),
+    r'nutfree': PropertySchema(
+      id: 4,
+      name: r'nutfree',
+      type: IsarType.bool,
+    ),
     r'price': PropertySchema(
-      id: 2,
+      id: 5,
       name: r'price',
       type: IsarType.double,
     ),
     r'rating': PropertySchema(
-      id: 3,
+      id: 6,
       name: r'rating',
       type: IsarType.long,
+    ),
+    r'vegan': PropertySchema(
+      id: 7,
+      name: r'vegan',
+      type: IsarType.bool,
+    ),
+    r'vegetarian': PropertySchema(
+      id: 8,
+      name: r'vegetarian',
+      type: IsarType.bool,
     )
   },
   estimateSize: _mealEstimateSize,
@@ -58,7 +83,12 @@ int _mealEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.description.length * 3;
+  {
+    final value = object.description;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.name.length * 3;
   return bytesCount;
 }
@@ -69,10 +99,15 @@ void _mealSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.description);
-  writer.writeString(offsets[1], object.name);
-  writer.writeDouble(offsets[2], object.price);
-  writer.writeLong(offsets[3], object.rating);
+  writer.writeBool(offsets[0], object.dairyfree);
+  writer.writeString(offsets[1], object.description);
+  writer.writeBool(offsets[2], object.glutenfree);
+  writer.writeString(offsets[3], object.name);
+  writer.writeBool(offsets[4], object.nutfree);
+  writer.writeDouble(offsets[5], object.price);
+  writer.writeLong(offsets[6], object.rating);
+  writer.writeBool(offsets[7], object.vegan);
+  writer.writeBool(offsets[8], object.vegetarian);
 }
 
 Meal _mealDeserialize(
@@ -82,10 +117,15 @@ Meal _mealDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Meal(
-    reader.readString(offsets[1]),
-    reader.readLongOrNull(offsets[3]),
-    reader.readDoubleOrNull(offsets[2]),
-    reader.readString(offsets[0]),
+    reader.readString(offsets[3]),
+    reader.readDoubleOrNull(offsets[5]),
+    dairyfree: reader.readBoolOrNull(offsets[0]),
+    description: reader.readStringOrNull(offsets[1]),
+    glutenfree: reader.readBoolOrNull(offsets[2]),
+    nutfree: reader.readBoolOrNull(offsets[4]),
+    rating: reader.readLongOrNull(offsets[6]),
+    vegan: reader.readBoolOrNull(offsets[7]),
+    vegetarian: reader.readBoolOrNull(offsets[8]),
   );
   object.id = id;
   return object;
@@ -99,13 +139,23 @@ P _mealDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 5:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 6:
       return (reader.readLongOrNull(offset)) as P;
+    case 7:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 8:
+      return (reader.readBoolOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -199,8 +249,50 @@ extension MealQueryWhere on QueryBuilder<Meal, Meal, QWhereClause> {
 }
 
 extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> dairyfreeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'dairyfree',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> dairyfreeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'dairyfree',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> dairyfreeEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dairyfree',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> descriptionIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'description',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> descriptionIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'description',
+      ));
+    });
+  }
+
   QueryBuilder<Meal, Meal, QAfterFilterCondition> descriptionEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -213,7 +305,7 @@ extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
   }
 
   QueryBuilder<Meal, Meal, QAfterFilterCondition> descriptionGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -228,7 +320,7 @@ extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
   }
 
   QueryBuilder<Meal, Meal, QAfterFilterCondition> descriptionLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -243,8 +335,8 @@ extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
   }
 
   QueryBuilder<Meal, Meal, QAfterFilterCondition> descriptionBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -325,6 +417,32 @@ extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'description',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> glutenfreeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'glutenfree',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> glutenfreeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'glutenfree',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> glutenfreeEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'glutenfree',
+        value: value,
       ));
     });
   }
@@ -509,6 +627,31 @@ extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> nutfreeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'nutfree',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> nutfreeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'nutfree',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> nutfreeEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nutfree',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Meal, Meal, QAfterFilterCondition> priceIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -654,6 +797,57 @@ extension MealQueryFilter on QueryBuilder<Meal, Meal, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> veganIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'vegan',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> veganIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'vegan',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> veganEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'vegan',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> vegetarianIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'vegetarian',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> vegetarianIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'vegetarian',
+      ));
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterFilterCondition> vegetarianEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'vegetarian',
+        value: value,
+      ));
+    });
+  }
 }
 
 extension MealQueryObject on QueryBuilder<Meal, Meal, QFilterCondition> {}
@@ -661,6 +855,18 @@ extension MealQueryObject on QueryBuilder<Meal, Meal, QFilterCondition> {}
 extension MealQueryLinks on QueryBuilder<Meal, Meal, QFilterCondition> {}
 
 extension MealQuerySortBy on QueryBuilder<Meal, Meal, QSortBy> {
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByDairyfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dairyfree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByDairyfreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dairyfree', Sort.desc);
+    });
+  }
+
   QueryBuilder<Meal, Meal, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -673,6 +879,18 @@ extension MealQuerySortBy on QueryBuilder<Meal, Meal, QSortBy> {
     });
   }
 
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByGlutenfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'glutenfree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByGlutenfreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'glutenfree', Sort.desc);
+    });
+  }
+
   QueryBuilder<Meal, Meal, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -682,6 +900,18 @@ extension MealQuerySortBy on QueryBuilder<Meal, Meal, QSortBy> {
   QueryBuilder<Meal, Meal, QAfterSortBy> sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByNutfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nutfree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByNutfreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nutfree', Sort.desc);
     });
   }
 
@@ -708,9 +938,45 @@ extension MealQuerySortBy on QueryBuilder<Meal, Meal, QSortBy> {
       return query.addSortBy(r'rating', Sort.desc);
     });
   }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByVegan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegan', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByVeganDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegan', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByVegetarian() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegetarian', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> sortByVegetarianDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegetarian', Sort.desc);
+    });
+  }
 }
 
 extension MealQuerySortThenBy on QueryBuilder<Meal, Meal, QSortThenBy> {
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByDairyfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dairyfree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByDairyfreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dairyfree', Sort.desc);
+    });
+  }
+
   QueryBuilder<Meal, Meal, QAfterSortBy> thenByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -720,6 +986,18 @@ extension MealQuerySortThenBy on QueryBuilder<Meal, Meal, QSortThenBy> {
   QueryBuilder<Meal, Meal, QAfterSortBy> thenByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByGlutenfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'glutenfree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByGlutenfreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'glutenfree', Sort.desc);
     });
   }
 
@@ -747,6 +1025,18 @@ extension MealQuerySortThenBy on QueryBuilder<Meal, Meal, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByNutfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nutfree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByNutfreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nutfree', Sort.desc);
+    });
+  }
+
   QueryBuilder<Meal, Meal, QAfterSortBy> thenByPrice() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'price', Sort.asc);
@@ -770,9 +1060,39 @@ extension MealQuerySortThenBy on QueryBuilder<Meal, Meal, QSortThenBy> {
       return query.addSortBy(r'rating', Sort.desc);
     });
   }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByVegan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegan', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByVeganDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegan', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByVegetarian() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegetarian', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QAfterSortBy> thenByVegetarianDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'vegetarian', Sort.desc);
+    });
+  }
 }
 
 extension MealQueryWhereDistinct on QueryBuilder<Meal, Meal, QDistinct> {
+  QueryBuilder<Meal, Meal, QDistinct> distinctByDairyfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dairyfree');
+    });
+  }
+
   QueryBuilder<Meal, Meal, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -780,10 +1100,22 @@ extension MealQueryWhereDistinct on QueryBuilder<Meal, Meal, QDistinct> {
     });
   }
 
+  QueryBuilder<Meal, Meal, QDistinct> distinctByGlutenfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'glutenfree');
+    });
+  }
+
   QueryBuilder<Meal, Meal, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QDistinct> distinctByNutfree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nutfree');
     });
   }
 
@@ -798,6 +1130,18 @@ extension MealQueryWhereDistinct on QueryBuilder<Meal, Meal, QDistinct> {
       return query.addDistinctBy(r'rating');
     });
   }
+
+  QueryBuilder<Meal, Meal, QDistinct> distinctByVegan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'vegan');
+    });
+  }
+
+  QueryBuilder<Meal, Meal, QDistinct> distinctByVegetarian() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'vegetarian');
+    });
+  }
 }
 
 extension MealQueryProperty on QueryBuilder<Meal, Meal, QQueryProperty> {
@@ -807,15 +1151,33 @@ extension MealQueryProperty on QueryBuilder<Meal, Meal, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Meal, String, QQueryOperations> descriptionProperty() {
+  QueryBuilder<Meal, bool?, QQueryOperations> dairyfreeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dairyfree');
+    });
+  }
+
+  QueryBuilder<Meal, String?, QQueryOperations> descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
+    });
+  }
+
+  QueryBuilder<Meal, bool?, QQueryOperations> glutenfreeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'glutenfree');
     });
   }
 
   QueryBuilder<Meal, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<Meal, bool?, QQueryOperations> nutfreeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nutfree');
     });
   }
 
@@ -828,6 +1190,18 @@ extension MealQueryProperty on QueryBuilder<Meal, Meal, QQueryProperty> {
   QueryBuilder<Meal, int?, QQueryOperations> ratingProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'rating');
+    });
+  }
+
+  QueryBuilder<Meal, bool?, QQueryOperations> veganProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'vegan');
+    });
+  }
+
+  QueryBuilder<Meal, bool?, QQueryOperations> vegetarianProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'vegetarian');
     });
   }
 }

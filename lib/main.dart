@@ -18,7 +18,7 @@ class MyMensa extends StatefulWidget {
   const MyMensa({super.key, this.container});
 
   @override
-  _MyMensaState createState() => _MyMensaState();
+  State<MyMensa> createState() => _MyMensaState();
 }
 
 class _MyMensaState extends State<MyMensa> {
@@ -81,7 +81,7 @@ class _MyMensaState extends State<MyMensa> {
                 currentContainer = index;
               });
             },
-            children: const [ContainerT1(), Container1()],
+            children: const [ContainerT1(), MainView(1)],
           )),
       bottomNavigationBar: FooterWidget(changeContainer, getContainer),
     ));

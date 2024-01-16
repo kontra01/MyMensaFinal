@@ -5,7 +5,7 @@ class ContainerT1 extends StatefulWidget {
   const ContainerT1({super.key});
 
   @override
-  _ContainerT1State createState() => _ContainerT1State();
+  State<ContainerT1> createState() => _ContainerT1State();
 }
 
 class _ContainerT1State extends State<ContainerT1> {
@@ -19,9 +19,9 @@ class _ContainerT1State extends State<ContainerT1> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Nothing"),
+        title: const Text("Nothing"),
       ),
-      body: Text("container text"),
+      body: const Text("container text"),
     );
   }
 }
