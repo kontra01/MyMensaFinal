@@ -52,7 +52,7 @@ class _MainView extends State<MainView> {
     planId = widget.planId;
   }
 
-  Future<void> initialize() async {
+  Future<bool> initialize() async {
     dir = await getApplicationDocumentsDirectory();
     final plans = planSchema.plans;
     // the following is mostly for default data generating
@@ -65,17 +65,17 @@ class _MainView extends State<MainView> {
     } else {
       plan = planT;
     }
-    mealSchema.meals.clear();
-    if (await mealSchema.meals.get(6) == null) {
-      await mealSchema.writeTxn(() async {
-        await mealSchema.meals.put(Meal("Gebratener Reis", 3.5));
-        await mealSchema.meals.put(Meal("Bohnensuppe", 4));
-        await mealSchema.meals.put(Meal("Spinat-Quiche", 4.5));
-        await mealSchema.meals.put(Meal("Tomatensalat", 2.5));
-        await mealSchema.meals.put(Meal("Kirschkuchen", 3));
-        await mealSchema.meals.put(Meal("Pasta Alio Olio", 4.5));
-      });
-    }
+    await mealSchema.writeTxn(() async {
+      await mealSchema.meals.clear();
+      await mealSchema.meals.putAll([
+        Meal("Gebratener Reis", 3.5),
+        Meal("Bohnensuppe", 4),
+        Meal("Spinat-Quiche", 4.5),
+        Meal("Tomatensalat", 2.5),
+        Meal("Kirschkuchen", 3),
+        Meal("Pasta Alio Olio", 4.5)
+      ]);
+    });
     // MT(name, mealId, typus, hours, minutes)
     // -> typus is yet to be defined and so on.
     MealType mt1 = MealType("Prima Klima", [1], 0, 13, 0);
@@ -104,7 +104,7 @@ class _MainView extends State<MainView> {
             curve: Curves.easeInOut);
       });
     });
-    return;
+    return true;
   }
 
   late int selection; // variable that determines which slide the user is on
@@ -118,24 +118,25 @@ class _MainView extends State<MainView> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
+    return FutureBuilder<bool>(
         future: initialize(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.hasError) {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Loading...'),
-              ),
-              body: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          } else {
+          if (snapshot.hasData) {
+            print("Starting loaded build");
             return Scaffold(
                 appBar: AppBar(
                   title: Text(dateToString(date, dateFocus)),
                 ),
                 body: buildLoaded(context));
+          } else {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Loading...'),
+              ),
+              body: const Center(
+                child: Text("Loading Data..."),
+              ),
+            );
           }
         });
   }
