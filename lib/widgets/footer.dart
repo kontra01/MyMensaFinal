@@ -11,8 +11,8 @@ final ButtonStyle footerButton = ElevatedButton.styleFrom(
 
 // ignore: must_be_immutable
 class FooterWidget extends StatelessWidget {
-  late var changeContainer;
-  late var getIndex;
+  late Function changeContainer;
+  late Function getIndex;
 
   FooterWidget(this.changeContainer, this.getIndex, {super.key});
 

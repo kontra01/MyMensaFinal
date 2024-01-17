@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
@@ -16,14 +18,17 @@ List<String> weekdays = [
   "Sonntag"
 ];
 
+// ignore: must_be_immutable
 class MainView extends StatefulWidget {
-  final Id planId; // plan schema
+  Isar mealSchema; // meal schema
+  Isar planSchema;
+  Id planId; // plan schema
 
-  const MainView(this.planId, {super.key});
+  MainView(this.mealSchema, this.planSchema, this.planId, {super.key});
 
   @override
   State<MainView> createState() {
-    return _MainView(planId);
+    return _MainView();
   }
 }
 
@@ -36,33 +41,19 @@ class _MainView extends State<MainView> {
   late Isar mealSchema; // meal schema
   late Isar planSchema;
   late Plan plan; // plan
-  Id planId;
-  late bool initialized;
-
-  _MainView(this.planId);
+  late Directory dir;
+  late Id planId;
 
   @override
   void initState() {
     super.initState();
-    initialized = false;
-    initialize();
+    mealSchema = widget.mealSchema;
+    planSchema = widget.planSchema;
+    planId = widget.planId;
   }
 
   Future<void> initialize() async {
-    if (initialized) return;
-    final dir = await getApplicationDocumentsDirectory();
-    try {
-      mealSchema = await Isar.open([MealSchema], directory: dir.path);
-    } catch (e) {
-      mealSchema.close();
-      mealSchema = await Isar.open([MealSchema], directory: dir.path);
-    }
-    try {
-      planSchema = await Isar.open([PlanSchema], directory: dir.path);
-    } catch (e) {
-      planSchema.close();
-      planSchema = await Isar.open([PlanSchema], directory: dir.path);
-    }
+    dir = await getApplicationDocumentsDirectory();
     final plans = planSchema.plans;
     // the following is mostly for default data generating
     Plan? planT = await plans.get(1);
@@ -74,6 +65,7 @@ class _MainView extends State<MainView> {
     } else {
       plan = planT;
     }
+    mealSchema.meals.clear();
     if (await mealSchema.meals.get(6) == null) {
       await mealSchema.writeTxn(() async {
         await mealSchema.meals.put(Meal("Gebratener Reis", 3.5));
@@ -111,8 +103,8 @@ class _MainView extends State<MainView> {
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut);
       });
-      initialized = true;
     });
+    return;
   }
 
   late int selection; // variable that determines which slide the user is on
@@ -126,22 +118,26 @@ class _MainView extends State<MainView> {
 
   @override
   Widget build(BuildContext context) {
-    if (!initialized) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('Loading...'),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else {
-      return Scaffold(
-          appBar: AppBar(
-            title: Text(dateToString(date, dateFocus)),
-          ),
-          body: buildLoaded(context));
-    }
+    return FutureBuilder<void>(
+        future: initialize(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.hasError) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Loading...'),
+              ),
+              body: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          } else {
+            return Scaffold(
+                appBar: AppBar(
+                  title: Text(dateToString(date, dateFocus)),
+                ),
+                body: buildLoaded(context));
+          }
+        });
   }
 
   Widget buildLoaded(BuildContext context) {
