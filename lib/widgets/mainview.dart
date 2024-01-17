@@ -17,6 +17,10 @@ List<String> weekdays = [
   "Sonntag"
 ];
 
+// styles
+
+List<List<dynamic>> styles = [];
+
 // ignore: must_be_immutable
 class MainView extends StatefulWidget {
   Isar mealSchema; // meal schema
@@ -129,7 +133,6 @@ class _MainView extends State<MainView> {
   Widget build(BuildContext context) {
     print("checking...");
     if (isInitialized) {
-      print("Starting loaded build");
       return buildLoaded(context);
     } else {
       return const Text('Loading...');
@@ -187,7 +190,21 @@ class _MainView extends State<MainView> {
     if (mealType.mealIds.isEmpty) {
       return const SizedBox.shrink();
     }
-    return Column(children: generateMealRows(mealType.mealIds));
+    return Column(children: [
+      Container(
+        color: Colors.blue,
+        padding: const EdgeInsets.all(16.0),
+        child: const Text(
+          'Your Header Title',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      ...generateMealRows(mealType.mealIds)
+    ]);
   }
 
   List<Widget> generateMealRows(List<Id> mealIds) {
