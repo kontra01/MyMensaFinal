@@ -47,6 +47,7 @@ class _MainView extends State<MainView> {
   late Directory dir;
   late Id planId;
   bool isInitialized = false;
+  late Function appBarStateSetter;
 
   @override
   void initState() {
@@ -147,10 +148,15 @@ class _MainView extends State<MainView> {
     );
   }
 
-  Widget buildLoaded(BuildContext context) {
+  Widget buildLoaded(context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(dateToString(date, dateFocus)),
+          title: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              appBarStateSetter = setState;
+              return Text(dateToString(date, dateFocus));
+            },
+          ),
         ),
         body: Column(
           children: [
@@ -158,11 +164,11 @@ class _MainView extends State<MainView> {
               child: PageView.builder(
                   controller: controller,
                   onPageChanged: (index) {
-                    setState(() {
-                      change = index - selection;
+                    change = index - selection;
+                    appBarStateSetter(() {
                       date = scrollDate(change);
-                      selection = index;
                     });
+                    selection = index;
                   },
                   itemBuilder: (context, pageIndex) {
                     MensaDay? currentMensaDay = plan[pageIndex];
@@ -176,14 +182,27 @@ class _MainView extends State<MainView> {
 
                     // THIS PART IS THE ACTUAL BOXES
                     return Column(
-                      children: currentTypes.map((currentType) {
-                        return generateTypeBox(currentType);
-                      }).toList(),
+                      children: joinWidgetList(
+                          currentTypes.map((currentType) {
+                            return generateTypeBox(currentType);
+                          }).toList(),
+                          const SizedBox(height: 20.0)),
                     );
                   }),
             )
           ],
         ));
+  }
+
+  List<Widget> joinWidgetList(List<Widget> widgetList, Widget joinment) {
+    if (widgetList.isEmpty) return widgetList;
+    List<Widget> newWidgetList = [widgetList.removeAt(0)];
+
+    for (Widget widget in widgetList) {
+      newWidgetList.add(joinment);
+      newWidgetList.add(widget);
+    }
+    return newWidgetList;
   }
 
   Widget generateTypeBox(MealType mealType) {
@@ -193,10 +212,11 @@ class _MainView extends State<MainView> {
     return Column(children: [
       Container(
         color: Colors.blue,
-        padding: const EdgeInsets.all(16.0),
-        child: const Text(
-          'Your Header Title',
-          style: TextStyle(
+        padding: const EdgeInsets.all(14.0),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          mealType.name.toUpperCase(),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20.0,
             fontWeight: FontWeight.bold,
