@@ -36,7 +36,7 @@ class Plan {
   /// Returns [MensaDay] for provided [index]. If [DateTime] is not added for [index] yet, null is returned.
 
   MensaDay? operator [](int index) {
-    return index < 0 || index > _indices.length ? null : _indices[index];
+    return index < 0 || index >= _indices.length ? null : _indices[index];
   }
 
   /// Returns [DateTime] for provided [DateTime]. If [DateTime] is not added for [DateTime] yet, null is returned.

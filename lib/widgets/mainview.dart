@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
@@ -43,6 +42,7 @@ class _MainView extends State<MainView> {
   late Plan plan; // plan
   late Directory dir;
   late Id planId;
+  bool isInitialized = false;
 
   @override
   void initState() {
@@ -50,13 +50,35 @@ class _MainView extends State<MainView> {
     mealSchema = widget.mealSchema;
     planSchema = widget.planSchema;
     planId = widget.planId;
+    change = 0;
+    if (!isInitialized) {
+      initialize().then((r) {
+        if (r) {
+          int futureIndex = plan.getClosestFutureDay(today);
+          date = plan.getAccountedDate(futureIndex);
+          selection = futureIndex;
+          controller = PageController(initialPage: selection);
+        } else {
+          // error
+        }
+        setState(() {
+          isInitialized = true;
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   Future<bool> initialize() async {
     dir = await getApplicationDocumentsDirectory();
     final plans = planSchema.plans;
     // the following is mostly for default data generating
-    Plan? planT = await plans.get(1);
+    Plan? planT = await plans.get(planId);
     if (planT == null) {
       plan = Plan();
       await planSchema.writeTxn(() async {
@@ -91,19 +113,6 @@ class _MainView extends State<MainView> {
       MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3, mt5]),
       MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6, mt4])
     ]);
-    setState(() {
-      int futureIndex = plan.getClosestFutureDay(today);
-      date = plan.getAccountedDate(futureIndex);
-      selection = futureIndex;
-      controller = PageController(initialPage: selection);
-      change = 0;
-
-      Future.delayed(Duration(milliseconds: 200 * selection), () {
-        controller.animateToPage(selection,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut);
-      });
-    });
     return true;
   }
 
@@ -118,125 +127,108 @@ class _MainView extends State<MainView> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-        future: initialize(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            print("Starting loaded build");
-            return Scaffold(
-                appBar: AppBar(
-                  title: Text(dateToString(date, dateFocus)),
-                ),
-                body: buildLoaded(context));
-          } else {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Loading...'),
-              ),
-              body: const Center(
-                child: Text("Loading Data..."),
-              ),
-            );
-          }
-        });
+    print("checking...");
+    if (isInitialized) {
+      print("Starting loaded build");
+      return buildLoaded(context);
+    } else {
+      return const Text('Loading...');
+    }
+  }
+
+  DateTime scrollDate(int change) {
+    return DateTime(
+      dateFocus == 2 ? date.year + change : date.year,
+      dateFocus == 1 ? date.month + change : date.month,
+      dateFocus == 0 ? date.day + change : date.day,
+    );
   }
 
   Widget buildLoaded(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(dateToString(date, dateFocus)),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-                controller: controller,
-                onPageChanged: (index) {
-                  setState(() {
-                    change = index - selection;
-                    date = DateTime(
-                      dateFocus == 2 ? date.year + change : date.year,
-                      dateFocus == 1 ? date.month + change : date.month,
-                      dateFocus == 0 ? date.day + change : date.day,
-                    );
-                    selection = index;
-                  });
-                },
-                itemBuilder: (context, index1) {
-                  MensaDay? currentMensaDay = plan[index1];
-                  if (currentMensaDay == null) {
-                    return const Text("No meals entered for this date.");
-                  }
-                  List<MealType>? currentTypes = currentMensaDay.mealTypes;
-                  if (currentTypes.isEmpty) {
-                    return const Text("No meals entered for this date.");
-                  }
+        appBar: AppBar(
+          title: Text(dateToString(date, dateFocus)),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                  controller: controller,
+                  onPageChanged: (index) {
+                    setState(() {
+                      change = index - selection;
+                      date = scrollDate(change);
+                      selection = index;
+                    });
+                  },
+                  itemBuilder: (context, pageIndex) {
+                    MensaDay? currentMensaDay = plan[pageIndex];
+                    if (currentMensaDay == null) {
+                      return const Text("No meals entered for this date.");
+                    }
+                    List<MealType>? currentTypes = currentMensaDay.mealTypes;
+                    if (currentTypes.isEmpty) {
+                      return const Text("No meals entered for this date.");
+                    }
 
-                  // THIS PART IS THE ACTUAL BOXES
-                  return ListView.builder(
-                      itemCount: currentTypes.length,
-                      itemBuilder: (context, index2) {
-                        MealType currentType = currentTypes[index2];
-                        if (currentType.mealIds.isEmpty) {
-                          return null;
-                        }
-                        return ListView.builder(
-                          itemCount: currentType.mealIds.length,
-                          itemBuilder: (context, index3) {
-                            Id mealId = currentType.mealIds[index3];
-                            return FutureBuilder<Meal?>(
-                              future: getMeal(mealId),
-                              builder: (BuildContext context,
-                                  AsyncSnapshot<Meal?> snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const ListTile(
-                                    title: Text('Loading meal details...'),
-                                  );
-                                } else if (snapshot.hasError) {
-                                  return const ListTile(
-                                    title: Text('Error fetching meal details'),
-                                  );
-                                } else if (snapshot.hasData) {
-                                  Meal meal = snapshot.data!;
-                                  return ListTile(
-                                    title: Text(meal.name),
-                                    subtitle: Text(meal.getSubtitle()),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          // Edit button
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () {
-                                            // TODO: create plan and interface for editing.
-                                          },
-                                        ),
-                                        IconButton(
-                                          // Rate button
-                                          icon: const Icon(Icons.star),
-                                          onPressed: () {
-                                            // TODO: rate from 1 to ten.
-                                          },
-                                        )
-                                      ],
-                                    ),
-                                  );
-                                } else {
-                                  return const ListTile(
-                                    title: Text('No meal details available'),
-                                  );
-                                }
-                              },
-                            );
-                          },
-                        );
-                      });
-                }),
-          )
-        ],
-      ),
-    );
+                    // THIS PART IS THE ACTUAL BOXES
+                    return Column(
+                      children: currentTypes.map((currentType) {
+                        return generateTypeBox(currentType);
+                      }).toList(),
+                    );
+                  }),
+            )
+          ],
+        ));
+  }
+
+  Widget generateTypeBox(MealType mealType) {
+    if (mealType.mealIds.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(children: generateMealRows(mealType.mealIds));
+  }
+
+  List<Widget> generateMealRows(List<Id> mealIds) {
+    return mealIds.map((mealId) {
+      return FutureBuilder<Meal?>(
+        future: getMeal(mealId),
+        builder: (BuildContext context, AsyncSnapshot<Meal?> snapshot) {
+          if (snapshot.hasData) {
+            Meal? meal = snapshot.data;
+            if (meal == null) {
+              return const Text("No meals entered for this date.");
+            }
+            return ListTile(
+              title: Text(meal.name),
+              subtitle: Text(meal.getSubtitle()),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    // Edit button
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {
+                      // TODO: create plan and interface for editing.
+                    },
+                  ),
+                  IconButton(
+                    // Rate button
+                    icon: const Icon(Icons.star),
+                    onPressed: () {
+                      // TODO: rate from 1 to ten.
+                    },
+                  )
+                ],
+              ),
+            );
+          } else {
+            return const Text('No meal details available');
+          }
+        },
+      );
+    }).toList();
   }
 
   Future<Meal?> getMeal(Id mealId) async {
