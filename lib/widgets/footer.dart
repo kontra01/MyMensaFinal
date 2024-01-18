@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
+import 'search.dart';
 import 'variables.dart';
 
 final ButtonStyle footerButton = ElevatedButton.styleFrom(
@@ -11,10 +13,15 @@ final ButtonStyle footerButton = ElevatedButton.styleFrom(
 
 // ignore: must_be_immutable
 class FooterWidget extends StatelessWidget {
-  late Function changeContainer;
-  late Function getIndex;
+  Function dateFocusSetter;
+  Function dateFocusGetter;
+  Isar mealSchema;
+  Isar planSchema;
+  Id planId;
 
-  FooterWidget(this.changeContainer, this.getIndex, {super.key});
+  FooterWidget(this.mealSchema, this.planSchema, this.planId,
+      this.dateFocusGetter, this.dateFocusSetter,
+      {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +32,8 @@ class FooterWidget extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                if (this.getIndex == 0) return;
-                changeContainer(0);
+                _showPopUpWindow(
+                    context, CustomPopUp(mealSchema, planSchema, planId));
               },
               style: footerButton,
               child: const Icon(Icons.search),
@@ -34,10 +41,7 @@ class FooterWidget extends StatelessWidget {
           ),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {
-                if (this.getIndex == 1) return;
-                changeContainer(1);
-              },
+              onPressed: () {},
               style: footerButton,
               child: const Icon(Icons.today),
             ),
@@ -51,6 +55,15 @@ class FooterWidget extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+
+  void _showPopUpWindow(BuildContext context, StatefulWidget widget) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return widget;
+      },
     );
   }
 }

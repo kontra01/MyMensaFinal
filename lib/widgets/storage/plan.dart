@@ -115,6 +115,16 @@ class Plan {
     }
   }
 
+  List<MensaDay> getAllNonNulls() {
+    List<MensaDay> nonNulls = [];
+    for (MensaDay? d in _indices) {
+      if (d != null) nonNulls.add(d);
+    }
+    print(_indices);
+    print(nonNulls);
+    return nonNulls;
+  }
+
   int getClosestFutureDay(DateTime date) {
     int iD = getAccountedIndex(date);
     if (iD < 0) {

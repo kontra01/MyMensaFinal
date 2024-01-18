@@ -5,16 +5,15 @@ import 'package:isar/isar.dart';
 import 'storage/plan.dart';
 import 'storage/meal.dart';
 import 'storage/datemap.dart';
-import 'package:path_provider/path_provider.dart';
 
 List<String> weekdays = [
-  "Montag",
-  "Dienstag",
-  "Mittwoch",
-  "Donnerstag",
-  "Freitag",
-  "Samstag",
-  "Sonntag"
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
 ];
 
 // styles
@@ -26,8 +25,12 @@ class MainView extends StatefulWidget {
   Isar mealSchema; // meal schema
   Isar planSchema;
   Id planId; // plan schema
+  Function dateFocusGetter;
+  Function dateFocusSetter;
 
-  MainView(this.mealSchema, this.planSchema, this.planId, {super.key});
+  MainView(this.mealSchema, this.planSchema, this.planId, this.dateFocusGetter,
+      this.dateFocusSetter,
+      {super.key});
 
   @override
   State<MainView> createState() {
@@ -48,6 +51,16 @@ class _MainView extends State<MainView> {
   late Id planId;
   bool isInitialized = false;
   late Function appBarStateSetter;
+  List<Function> pageViewFocus;
+
+  _MainView({this.pageViewFocus = const []}) {
+    pageViewFocus = [
+      generateViewFocusDay,
+      generateViewFocusWeek,
+      generateViewFocusMonth,
+      generateViewFocusYear
+    ];
+  }
 
   @override
   void initState() {
@@ -80,18 +93,6 @@ class _MainView extends State<MainView> {
   }
 
   Future<bool> initialize() async {
-    dir = await getApplicationDocumentsDirectory();
-    final plans = planSchema.plans;
-    // the following is mostly for default data generating
-    Plan? planT = await plans.get(planId);
-    if (planT == null) {
-      plan = Plan();
-      await planSchema.writeTxn(() async {
-        await plans.put(plan);
-      });
-    } else {
-      plan = planT;
-    }
     await mealSchema.writeTxn(() async {
       await mealSchema.meals.clear();
       await mealSchema.meals.putAll([
@@ -111,14 +112,39 @@ class _MainView extends State<MainView> {
     MealType mt4 = MealType("Beilagen", [4], 0, 13, 0);
     MealType mt5 = MealType("Desserts", [5], 0, 13, 30);
     MealType mt6 = MealType("Prima Klima", [3], 0, 13, 0);
-    plan.addDays([
-      MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1]),
-      MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1, mt4]),
-      MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2]),
-      MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3, mt5]),
-      MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6, mt4])
-    ]);
+
+    // the following is mostly for default data generating
+    await planSchema.writeTxn(() async {
+      await planSchema.plans.clear();
+    });
+    Plan? planT = await planSchema.plans.get(planId);
+    print(planT);
+    if (planT == null) {
+      plan = Plan();
+      plan.addDays([
+        MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1]),
+        MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1, mt4]),
+        MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2]),
+        MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3, mt5]),
+        MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6, mt4])
+      ]);
+      print("generated");
+      await planSchema.writeTxn(() async {
+        planSchema.plans.clear();
+        await planSchema.plans.put(plan);
+      });
+    } else {
+      plan = planT;
+    }
+
     return true;
+  }
+
+  void updatePlan() async {
+    await planSchema.writeTxn(() async {
+      await planSchema.plans.delete(planId);
+      await planSchema.plans.put(plan);
+    });
   }
 
   late int selection; // variable that determines which slide the user is on
@@ -126,7 +152,7 @@ class _MainView extends State<MainView> {
 
   late DateTime date; // current date. this is just helpful
 
-  int dateFocus = 0; // day = 0; month = 1; year = 2;
+  // day = 0; week = 1; month = 2; year = 3;
 
   late PageController controller; // for the sliding effect
 
@@ -140,11 +166,11 @@ class _MainView extends State<MainView> {
     }
   }
 
-  DateTime scrollDate(int change) {
+  DateTime scrollDate(int change, int dateFocus) {
     return DateTime(
-      dateFocus == 2 ? date.year + change : date.year,
-      dateFocus == 1 ? date.month + change : date.month,
-      dateFocus == 0 ? date.day + change : date.day,
+      dateFocus == 3 ? date.year + change : date.year,
+      dateFocus == 2 ? date.month + change : date.month,
+      dateFocus <= 1 ? date.day + change * (dateFocus == 1 ? 7 : 1) : date.day,
     );
   }
 
@@ -154,7 +180,7 @@ class _MainView extends State<MainView> {
           title: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               appBarStateSetter = setState;
-              return Text(dateToString(date, dateFocus));
+              return Text(dateToString(date, widget.dateFocusGetter()));
             },
           ),
         ),
@@ -166,32 +192,50 @@ class _MainView extends State<MainView> {
                   onPageChanged: (index) {
                     change = index - selection;
                     appBarStateSetter(() {
-                      date = scrollDate(change);
+                      date = scrollDate(change, widget.dateFocusGetter());
                     });
                     selection = index;
                   },
                   itemBuilder: (context, pageIndex) {
-                    MensaDay? currentMensaDay = plan[pageIndex];
-                    if (currentMensaDay == null) {
-                      return const Text("No meals entered for this date.");
-                    }
-                    List<MealType>? currentTypes = currentMensaDay.mealTypes;
-                    if (currentTypes.isEmpty) {
-                      return const Text("No meals entered for this date.");
-                    }
-
-                    // THIS PART IS THE ACTUAL BOXES
-                    return Column(
-                      children: joinWidgetList(
-                          currentTypes.map((currentType) {
-                            return generateTypeBox(currentType);
-                          }).toList(),
-                          const SizedBox(height: 20.0)),
-                    );
+                    return pageViewFocus[widget.dateFocusGetter()](pageIndex);
                   }),
             )
           ],
         ));
+  }
+
+  Widget generateViewFocusDay(pageIndex) {
+    MensaDay? currentMensaDay = plan[pageIndex];
+    if (currentMensaDay == null) {
+      return const Text("No meals entered for this date.");
+    }
+    List<MealType>? currentTypes = currentMensaDay.mealTypes;
+    if (currentTypes.isEmpty) {
+      return const Text("No meals entered for this date.");
+    }
+
+    // THIS PART IS THE ACTUAL BOXES
+    return Container(
+        margin: EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          children: joinWidgetList(
+              currentTypes.map((currentType) {
+                return generateTypeBox(currentType);
+              }).toList(),
+              const SizedBox(height: 20.0)),
+        ));
+  }
+
+  Widget generateViewFocusWeek(pageIndex) {
+    return Column();
+  }
+
+  Widget generateViewFocusMonth(pageIndex) {
+    return Column();
+  }
+
+  Widget generateViewFocusYear(pageIndex) {
+    return Column();
   }
 
   List<Widget> joinWidgetList(List<Widget> widgetList, Widget joinment) {

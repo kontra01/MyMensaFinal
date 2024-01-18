@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:isar/isar.dart';
 import 'package:mymensa/widgets/storage/meal.dart';
 import 'package:mymensa/widgets/storage/plan.dart';
@@ -31,9 +32,19 @@ class MyMensa extends StatefulWidget {
 }
 
 class _MyMensaState extends State<MyMensa> {
+  int dateFocus = 0;
+
   void changeContainer(int index) {}
 
-  void getContainer() {}
+  int dateFocusGetter() {
+    return dateFocus;
+  }
+
+  void dateFocusSetter(int newFocus) {
+    setState(() {
+      dateFocus = newFocus;
+    });
+  }
 
   Future<Isar> openSchema(List<CollectionSchema<dynamic>> schema,
       {String name = "default"}) async {
@@ -63,28 +74,33 @@ class _MyMensaState extends State<MyMensa> {
 
   @override
   void initState() {
+    dateFocus = 0;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        home: Scaffold(
-      appBar: getAppBar(),
-      body: FutureBuilder<bool>(
-          future: initializeSchemata(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              print("data received");
-              return MainView(mealSchema, planSchema, 1);
-            } else {
-              return const Center(
-                child: Text("loading..."),
-              );
-            }
-          }),
-      bottomNavigationBar: FooterWidget(changeContainer, getContainer),
-    ));
+        title: "My Mensa",
+        theme: ThemeData(
+            textTheme:
+                GoogleFonts.lexendTextTheme(Theme.of(context).textTheme)),
+        home: FutureBuilder<bool>(
+            future: initializeSchemata(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Scaffold(
+                    appBar: getAppBar(),
+                    body: MainView(mealSchema, planSchema, 1, dateFocusGetter,
+                        dateFocusSetter),
+                    bottomNavigationBar: FooterWidget(mealSchema, planSchema, 1,
+                        dateFocusGetter, dateFocusSetter));
+              } else {
+                return const Center(
+                  child: Text("loading..."),
+                );
+              }
+            }));
   }
 
   AppBar getAppBar() {
@@ -97,7 +113,7 @@ class _MyMensaState extends State<MyMensa> {
             height: 25.0,
           ),
           const SizedBox(width: 10.0),
-          const Text('MyMensa'),
+          const Text('My Mensa'),
         ],
       ),
       actions: [
@@ -105,7 +121,9 @@ class _MyMensaState extends State<MyMensa> {
           // settings button
           style: headerButton,
           icon: const Icon(Icons.settings),
-          onPressed: () {},
+          onPressed: () async {
+            print((await planSchema.plans.get(1))!.getAllNonNulls());
+          },
         ),
         IconButton(
           // personal button
