@@ -2,9 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
+import 'package:mymensa/main.dart';
+import 'package:mymensa/widgets/storage/allSchemata.dart';
+import 'storage/mealtype.dart';
+import 'storage/mensaday.dart';
 import 'storage/plan.dart';
 import 'storage/meal.dart';
-import 'storage/datemap.dart';
 
 List<String> weekdays = [
   "Monday",
@@ -22,14 +25,13 @@ List<List<dynamic>> styles = [];
 
 // ignore: must_be_immutable
 class MainView extends StatefulWidget {
-  Isar mealSchema; // meal schema
-  Isar planSchema;
+  AllSchemata allSchemata;
   Id planId; // plan schema
   Function dateFocusGetter;
   Function dateFocusSetter;
 
-  MainView(this.mealSchema, this.planSchema, this.planId, this.dateFocusGetter,
-      this.dateFocusSetter,
+  MainView(
+      this.allSchemata, this.planId, this.dateFocusGetter, this.dateFocusSetter,
       {super.key});
 
   @override
@@ -44,8 +46,6 @@ String dateToString(DateTime d, int focus) {
 }
 
 class _MainView extends State<MainView> {
-  late Isar mealSchema; // meal schema
-  late Isar planSchema;
   late Plan plan; // plan
   late Directory dir;
   late Id planId;
@@ -65,8 +65,6 @@ class _MainView extends State<MainView> {
   @override
   void initState() {
     super.initState();
-    mealSchema = widget.mealSchema;
-    planSchema = widget.planSchema;
     planId = widget.planId;
     change = 0;
     if (!isInitialized) {
@@ -93,9 +91,9 @@ class _MainView extends State<MainView> {
   }
 
   Future<bool> initialize() async {
-    await mealSchema.writeTxn(() async {
-      await mealSchema.meals.clear();
-      await mealSchema.meals.putAll([
+    await widget.allSchemata.mealSchema.writeTxn(() async {
+      await widget.allSchemata.mealSchema.meals.clear();
+      await widget.allSchemata.mealSchema.meals.putAll([
         Meal("Gebratener Reis", 3.5),
         Meal("Bohnensuppe", 4),
         Meal("Spinat-Quiche", 4.5),
@@ -114,24 +112,22 @@ class _MainView extends State<MainView> {
     MealType mt6 = MealType("Prima Klima", [3], 0, 13, 0);
 
     // the following is mostly for default data generating
-    await planSchema.writeTxn(() async {
-      await planSchema.plans.clear();
+    await widget.allSchemata.planSchema.writeTxn(() async {
+      await widget.allSchemata.planSchema.plans.clear();
     });
-    Plan? planT = await planSchema.plans.get(planId);
+    Plan? planT = await widget.allSchemata.planSchema.plans.get(planId);
     print(planT);
     if (planT == null) {
       plan = Plan();
-      plan.addDays([
-        MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1]),
-        MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1, mt4]),
-        MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2]),
-        MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3, mt5]),
-        MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6, mt4])
+      plan.addAll(widget.allSchemata, [
+        MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1.id]),
+        MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1.id, mt4.id]),
+        MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2.id]),
+        MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3.id, mt5.id]),
+        MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6.id, mt4.id])
       ]);
-      print("generated");
-      await planSchema.writeTxn(() async {
-        planSchema.plans.clear();
-        await planSchema.plans.put(plan);
+      await widget.allSchemata.planSchema.writeTxn(() async {
+        widget.allSchemata.planSchema.plans.put(plan);
       });
     } else {
       plan = planT;
@@ -141,9 +137,9 @@ class _MainView extends State<MainView> {
   }
 
   void updatePlan() async {
-    await planSchema.writeTxn(() async {
-      await planSchema.plans.delete(planId);
-      await planSchema.plans.put(plan);
+    await widget.allSchemata.planSchema.writeTxn(() async {
+      await widget.allSchemata.planSchema.plans.delete(planId);
+      await widget.allSchemata.planSchema.plans.put(plan);
     });
   }
 
@@ -189,7 +185,7 @@ class _MainView extends State<MainView> {
             Expanded(
               child: PageView.builder(
                   controller: controller,
-                  onPageChanged: (index) {
+                  onPageChanged: (index) async {
                     change = index - selection;
                     appBarStateSetter(() {
                       date = scrollDate(change, widget.dateFocusGetter());
@@ -197,19 +193,29 @@ class _MainView extends State<MainView> {
                     selection = index;
                   },
                   itemBuilder: (context, pageIndex) {
-                    return pageViewFocus[widget.dateFocusGetter()](pageIndex);
+                    return FutureBuilder<Widget>(
+                        future:
+                            pageViewFocus[widget.dateFocusGetter()](pageIndex),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return snapshot.data!;
+                          }
+                          return Text("loading...");
+                        });
                   }),
             )
           ],
         ));
   }
 
-  Widget generateViewFocusDay(pageIndex) {
-    MensaDay? currentMensaDay = plan[pageIndex];
+  Future<Widget> generateViewFocusDay(pageIndex) async {
+    MensaDay? currentMensaDay = plan[pageIndex] == null
+        ? null
+        : (await allSchemata.mensadaySchema.mensaDays.get(plan[pageIndex]!));
     if (currentMensaDay == null) {
       return const Text("No meals entered for this date.");
     }
-    List<MealType>? currentTypes = currentMensaDay.mealTypes;
+    List<Id>? currentTypes = currentMensaDay.mealTypes;
     if (currentTypes.isEmpty) {
       return const Text("No meals entered for this date.");
     }
@@ -219,9 +225,9 @@ class _MainView extends State<MainView> {
         margin: EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: joinWidgetList(
-              currentTypes.map((currentType) {
-                return generateTypeBox(currentType);
-              }).toList(),
+              currentTypes
+                  .map((currentType) => generateTypeBox(currentType))
+                  .toList(),
               const SizedBox(height: 20.0)),
         ));
   }
@@ -249,26 +255,34 @@ class _MainView extends State<MainView> {
     return newWidgetList;
   }
 
-  Widget generateTypeBox(MealType mealType) {
-    if (mealType.mealIds.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Column(children: [
-      Container(
-        color: Colors.blue,
-        padding: const EdgeInsets.all(14.0),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          mealType.name.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      ...generateMealRows(mealType.mealIds)
-    ]);
+  Widget generateTypeBox(Id mealTypeId) {
+    return FutureBuilder<MealType?>(
+      future: allSchemata.mealtypeSchema.mealTypes.get(mealTypeId),
+      builder: (BuildContext context, AsyncSnapshot<MealType?> snapshot) {
+        if (snapshot.hasData && snapshot.data != null) {
+          return Column(
+            children: [
+              Container(
+                color: Colors.blue,
+                padding: const EdgeInsets.all(14.0),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  snapshot.data!.name.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ...generateMealRows(snapshot.data!.mealIds),
+            ],
+          );
+        } else {
+          return const SizedBox.shrink();
+        }
+      },
+    );
   }
 
   List<Widget> generateMealRows(List<Id> mealIds) {
@@ -314,7 +328,7 @@ class _MainView extends State<MainView> {
 
   Future<Meal?> getMeal(Id mealId) async {
     try {
-      return await mealSchema.meals.get(mealId);
+      return await widget.allSchemata.mealSchema.meals.get(mealId);
     } catch (e) {
       return null;
     }

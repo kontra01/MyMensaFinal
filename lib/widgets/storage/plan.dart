@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
 import "package:isar/isar.dart";
-import "datemap.dart";
+import "allSchemata.dart";
+import "mensaday.dart";
 
 part "plan.g.dart";
 
@@ -10,10 +10,13 @@ class Plan {
   // -> List<Id> with Id being a Isar object id for the meals.
   DateTime? date0;
 
-  final List<MensaDay?> _indices = [];
+  final List<Id?> indices = [];
 
-  void add(MensaDay day) {
+  void add(AllSchemata schemata, MensaDay day) async {
     day.toUtc();
+    await schemata.mensadaySchema.writeTxn(() async {
+      await schemata.mensadaySchema.mensaDays.put(day);
+    });
     int thrIndex = getAccountedIndex(day.date);
 
     if (thrIndex < 0) {
@@ -22,38 +25,31 @@ class Plan {
     }
 
     if (thrIndex == 0) {
-      _indices.insert(0, day);
+      indices.insert(0, day.id);
       date0 = day.date;
       return;
-    } else if (thrIndex >= _indices.length) {
+    } else if (thrIndex >= indices.length) {
       expand(thrIndex - 1);
-      _indices.add(day);
+      indices.add(day.id);
     } else {
-      _indices[thrIndex] = day;
+      indices[thrIndex] = day.id;
     }
   }
 
   /// Returns [MensaDay] for provided [index]. If [DateTime] is not added for [index] yet, null is returned.
 
-  MensaDay? operator [](int index) {
-    return index < 0 || index >= _indices.length ? null : _indices[index];
+  Id? operator [](int index) {
+    return index < 0 || index >= indices.length ? null : indices[index];
   }
 
   /// Returns [DateTime] for provided [DateTime]. If [DateTime] is not added for [DateTime] yet, null is returned.
 
-  MensaDay? getDay(DateTime date) {
+  Id? getDay(DateTime date) {
     date = date.toUtc();
-    for (int i = 0; i < _indices.length; i++) {
-      if (DateUtils.isSameDay(_indices[i]!.date, date)) return _indices[i];
-    }
-    return null;
+    return this[getAccountedIndex(date)];
   }
 
   DateTime getAccountedDate(int index) {
-    if (this[index] != null) {
-      return this[index]!.date;
-    }
-
     return date0 == null
         ? DateTime.now().toUtc()
         : DateTime(date0!.year, date0!.month, date0!.day + index);
@@ -61,10 +57,12 @@ class Plan {
 
   int? getIndex(DateTime date) {
     date = date.toUtc();
-    for (int i = 0; i < _indices.length; i++) {
-      if (DateUtils.isSameDay(_indices[i]!.date, date)) return i;
+    int accountion = getAccountedIndex(date);
+    if (this[accountion] == null) {
+      return null;
+    } else {
+      return accountion;
     }
-    return null;
   }
 
   int getAccountedIndex(DateTime date) {
@@ -73,57 +71,53 @@ class Plan {
   }
 
   int? getUpperNonNull(int index) {
-    if (_indices.isEmpty || _indices.length < index + 1) return null;
+    if (indices.isEmpty || indices.length < index + 1) return null;
 
-    for (int j = index + 1; j < _indices.length; j++) {
-      if (_indices[j] != null) return j;
+    for (int j = index + 1; j < indices.length; j++) {
+      if (indices[j] != null) return j;
     }
 
     return null;
   }
 
   int? getLowerNonNull(int index) {
-    if (index <= 0 || _indices.isEmpty) return null;
+    if (index <= 0 || indices.isEmpty) return null;
 
     for (int j = index - 1; j >= 0; j--) {
-      if (_indices[j] != null) return j;
+      if (indices[j] != null) return j;
     }
 
     return null;
   }
 
   void expand(int index) {
-    int expansion = index - _indices.length + 1;
+    int expansion = index - indices.length + 1;
 
-    if (expansion >= 0 && expansion < _indices.length) return;
+    if (expansion >= 0 && expansion < indices.length) return;
 
     if (index < 0 && date0 != null) {
       date0 = DateTime(date0!.year, date0!.month, date0!.day + index);
     }
 
-    _indices.insertAll(index < 0 ? 0 : _indices.length,
-        List<MensaDay?>.generate(expansion.abs(), (i) => null));
+    indices.insertAll(index < 0 ? 0 : indices.length,
+        List<Id?>.generate(expansion.abs(), (i) => null));
   }
 
-  void addDay(DateTime date, [List<MealType> mealTypes = const []]) {
-    add(MensaDay(date, mealTypes: mealTypes));
-  }
-
-  void addDays([List<MensaDay> mensaDays = const []]) {
+  void addAll(AllSchemata allSchemata, [List<MensaDay> mensaDays = const []]) {
     for (MensaDay md in mensaDays) {
-      add(md);
+      add(allSchemata, md);
     }
   }
 
-  List<MensaDay> getAllNonNulls() {
-    List<MensaDay> nonNulls = [];
-    for (MensaDay? d in _indices) {
+  List<Id> getAllNonNulls() {
+    List<Id> nonNulls = [];
+    for (Id? d in indices) {
       if (d != null) nonNulls.add(d);
     }
-    print(_indices);
-    print(nonNulls);
     return nonNulls;
   }
+
+  List<Id?> getAll() => indices;
 
   int getClosestFutureDay(DateTime date) {
     int iD = getAccountedIndex(date);

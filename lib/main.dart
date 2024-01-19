@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar/isar.dart';
+import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'package:mymensa/widgets/storage/meal.dart';
 import 'package:mymensa/widgets/storage/plan.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,8 +10,7 @@ import 'widgets/footer.dart';
 import 'widgets/mainview.dart';
 import 'widgets/variables.dart';
 
-late Isar mealSchema;
-late Isar planSchema;
+late AllSchemata allSchemata;
 late Directory dir;
 bool schemataAreInitialized = false;
 
@@ -46,30 +46,11 @@ class _MyMensaState extends State<MyMensa> {
     });
   }
 
-  Future<Isar> openSchema(List<CollectionSchema<dynamic>> schema,
-      {String name = "default"}) async {
-    return await Isar.open(schema, directory: dir.path, name: name);
-  }
-
   Future<bool> initializeSchemata() async {
     print("initialization started.");
     dir = await getApplicationDocumentsDirectory();
-    try {
-      mealSchema = await openSchema([MealSchema], name: "mealSchema");
-    } catch (e) {
-      print("mS might be already opened.");
-      print(e);
-    }
-    print("mealSchema init");
-    try {
-      planSchema = await openSchema([PlanSchema], name: "planSchema");
-    } catch (e) {
-      print("pS might be already opened.");
-      print(e);
-    }
-    print("schemata initialized.");
-    schemataAreInitialized = true;
-    return true;
+    allSchemata = AllSchemata(dir);
+    return await allSchemata.initialize();
   }
 
   @override
@@ -91,10 +72,10 @@ class _MyMensaState extends State<MyMensa> {
               if (snapshot.hasData) {
                 return Scaffold(
                     appBar: getAppBar(),
-                    body: MainView(mealSchema, planSchema, 1, dateFocusGetter,
-                        dateFocusSetter),
-                    bottomNavigationBar: FooterWidget(mealSchema, planSchema, 1,
-                        dateFocusGetter, dateFocusSetter));
+                    body: MainView(
+                        allSchemata, 1, dateFocusGetter, dateFocusSetter),
+                    bottomNavigationBar: FooterWidget(
+                        allSchemata, 1, dateFocusGetter, dateFocusSetter));
               } else {
                 return const Center(
                   child: Text("loading..."),
@@ -122,7 +103,8 @@ class _MyMensaState extends State<MyMensa> {
           style: headerButton,
           icon: const Icon(Icons.settings),
           onPressed: () async {
-            print((await planSchema.plans.get(1))!.getAllNonNulls());
+            print(
+                (await allSchemata.planSchema.plans.get(1))!.getAllNonNulls());
           },
         ),
         IconButton(

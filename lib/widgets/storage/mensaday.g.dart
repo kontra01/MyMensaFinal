@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'plan.dart';
+part of 'mensaday.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,72 +9,74 @@ part of 'plan.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetPlanCollection on Isar {
-  IsarCollection<Plan> get plans => this.collection();
+extension GetMensaDayCollection on Isar {
+  IsarCollection<MensaDay> get mensaDays => this.collection();
 }
 
-const PlanSchema = CollectionSchema(
-  name: r'Plan',
-  id: 8143067535675439181,
+const MensaDaySchema = CollectionSchema(
+  name: r'MensaDay',
+  id: -153719640907613138,
   properties: {
-    r'date0': PropertySchema(
+    r'date': PropertySchema(
       id: 0,
-      name: r'date0',
+      name: r'date',
       type: IsarType.dateTime,
     ),
-    r'indices': PropertySchema(
+    r'mealTypes': PropertySchema(
       id: 1,
-      name: r'indices',
+      name: r'mealTypes',
       type: IsarType.longList,
     )
   },
-  estimateSize: _planEstimateSize,
-  serialize: _planSerialize,
-  deserialize: _planDeserialize,
-  deserializeProp: _planDeserializeProp,
+  estimateSize: _mensaDayEstimateSize,
+  serialize: _mensaDaySerialize,
+  deserialize: _mensaDayDeserialize,
+  deserializeProp: _mensaDayDeserializeProp,
   idName: r'id',
   indexes: {},
   links: {},
   embeddedSchemas: {},
-  getId: _planGetId,
-  getLinks: _planGetLinks,
-  attach: _planAttach,
+  getId: _mensaDayGetId,
+  getLinks: _mensaDayGetLinks,
+  attach: _mensaDayAttach,
   version: '3.1.0+1',
 );
 
-int _planEstimateSize(
-  Plan object,
+int _mensaDayEstimateSize(
+  MensaDay object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.indices.length * 8;
+  bytesCount += 3 + object.mealTypes.length * 8;
   return bytesCount;
 }
 
-void _planSerialize(
-  Plan object,
+void _mensaDaySerialize(
+  MensaDay object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.date0);
-  writer.writeLongList(offsets[1], object.indices);
+  writer.writeDateTime(offsets[0], object.date);
+  writer.writeLongList(offsets[1], object.mealTypes);
 }
 
-Plan _planDeserialize(
+MensaDay _mensaDayDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Plan();
-  object.date0 = reader.readDateTimeOrNull(offsets[0]);
+  final object = MensaDay(
+    reader.readDateTime(offsets[0]),
+    mealTypes: reader.readLongList(offsets[1]) ?? const [],
+  );
   object.id = id;
   return object;
 }
 
-P _planDeserializeProp<P>(
+P _mensaDayDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -82,36 +84,36 @@ P _planDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readLongOrNullList(offset) ?? []) as P;
+      return (reader.readLongList(offset) ?? const []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-Id _planGetId(Plan object) {
+Id _mensaDayGetId(MensaDay object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _planGetLinks(Plan object) {
+List<IsarLinkBase<dynamic>> _mensaDayGetLinks(MensaDay object) {
   return [];
 }
 
-void _planAttach(IsarCollection<dynamic> col, Id id, Plan object) {
+void _mensaDayAttach(IsarCollection<dynamic> col, Id id, MensaDay object) {
   object.id = id;
 }
 
-extension PlanQueryWhereSort on QueryBuilder<Plan, Plan, QWhere> {
-  QueryBuilder<Plan, Plan, QAfterWhere> anyId() {
+extension MensaDayQueryWhereSort on QueryBuilder<MensaDay, MensaDay, QWhere> {
+  QueryBuilder<MensaDay, MensaDay, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
-  QueryBuilder<Plan, Plan, QAfterWhereClause> idEqualTo(Id id) {
+extension MensaDayQueryWhere on QueryBuilder<MensaDay, MensaDay, QWhereClause> {
+  QueryBuilder<MensaDay, MensaDay, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: id,
@@ -120,7 +122,7 @@ extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterWhereClause> idNotEqualTo(Id id) {
+  QueryBuilder<MensaDay, MensaDay, QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -142,7 +144,7 @@ extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterWhereClause> idGreaterThan(Id id,
+  QueryBuilder<MensaDay, MensaDay, QAfterWhereClause> idGreaterThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -151,7 +153,7 @@ extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterWhereClause> idLessThan(Id id,
+  QueryBuilder<MensaDay, MensaDay, QAfterWhereClause> idLessThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -160,7 +162,7 @@ extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterWhereClause> idBetween(
+  QueryBuilder<MensaDay, MensaDay, QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -177,68 +179,53 @@ extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
   }
 }
 
-extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0IsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'date0',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0IsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'date0',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0EqualTo(
-      DateTime? value) {
+extension MensaDayQueryFilter
+    on QueryBuilder<MensaDay, MensaDay, QFilterCondition> {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> dateEqualTo(
+      DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'date0',
+        property: r'date',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0GreaterThan(
-    DateTime? value, {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> dateGreaterThan(
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'date0',
+        property: r'date',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0LessThan(
-    DateTime? value, {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> dateLessThan(
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'date0',
+        property: r'date',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0Between(
-    DateTime? lower,
-    DateTime? upper, {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> dateBetween(
+    DateTime lower,
+    DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'date0',
+        property: r'date',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -247,7 +234,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> idEqualTo(Id value) {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
@@ -256,7 +243,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> idGreaterThan(
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> idGreaterThan(
     Id value, {
     bool include = false,
   }) {
@@ -269,7 +256,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> idLessThan(
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> idLessThan(
     Id value, {
     bool include = false,
   }) {
@@ -282,7 +269,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> idBetween(
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -299,67 +286,54 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.elementIsNull(
-        property: r'indices',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.elementIsNotNull(
-        property: r'indices',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementEqualTo(
-      int? value) {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesElementEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'indices',
+        property: r'mealTypes',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementGreaterThan(
-    int? value, {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesElementGreaterThan(
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'indices',
+        property: r'mealTypes',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementLessThan(
-    int? value, {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesElementLessThan(
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'indices',
+        property: r'mealTypes',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementBetween(
-    int? lower,
-    int? upper, {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesElementBetween(
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'indices',
+        property: r'mealTypes',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -368,11 +342,11 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesLengthEqualTo(
-      int length) {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'indices',
+        r'mealTypes',
         length,
         true,
         length,
@@ -381,10 +355,10 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesIsEmpty() {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition> mealTypesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'indices',
+        r'mealTypes',
         0,
         true,
         0,
@@ -393,10 +367,11 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesIsNotEmpty() {
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'indices',
+        r'mealTypes',
         0,
         false,
         999999,
@@ -405,13 +380,14 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesLengthLessThan(
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesLengthLessThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'indices',
+        r'mealTypes',
         0,
         true,
         length,
@@ -420,13 +396,14 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesLengthGreaterThan(
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesLengthGreaterThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'indices',
+        r'mealTypes',
         length,
         include,
         999999,
@@ -435,7 +412,8 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesLengthBetween(
+  QueryBuilder<MensaDay, MensaDay, QAfterFilterCondition>
+      mealTypesLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -443,7 +421,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'indices',
+        r'mealTypes',
         lower,
         includeLower,
         upper,
@@ -453,80 +431,85 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 }
 
-extension PlanQueryObject on QueryBuilder<Plan, Plan, QFilterCondition> {}
+extension MensaDayQueryObject
+    on QueryBuilder<MensaDay, MensaDay, QFilterCondition> {}
 
-extension PlanQueryLinks on QueryBuilder<Plan, Plan, QFilterCondition> {}
+extension MensaDayQueryLinks
+    on QueryBuilder<MensaDay, MensaDay, QFilterCondition> {}
 
-extension PlanQuerySortBy on QueryBuilder<Plan, Plan, QSortBy> {
-  QueryBuilder<Plan, Plan, QAfterSortBy> sortByDate0() {
+extension MensaDayQuerySortBy on QueryBuilder<MensaDay, MensaDay, QSortBy> {
+  QueryBuilder<MensaDay, MensaDay, QAfterSortBy> sortByDate() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'date0', Sort.asc);
+      return query.addSortBy(r'date', Sort.asc);
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterSortBy> sortByDate0Desc() {
+  QueryBuilder<MensaDay, MensaDay, QAfterSortBy> sortByDateDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'date0', Sort.desc);
+      return query.addSortBy(r'date', Sort.desc);
     });
   }
 }
 
-extension PlanQuerySortThenBy on QueryBuilder<Plan, Plan, QSortThenBy> {
-  QueryBuilder<Plan, Plan, QAfterSortBy> thenByDate0() {
+extension MensaDayQuerySortThenBy
+    on QueryBuilder<MensaDay, MensaDay, QSortThenBy> {
+  QueryBuilder<MensaDay, MensaDay, QAfterSortBy> thenByDate() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'date0', Sort.asc);
+      return query.addSortBy(r'date', Sort.asc);
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterSortBy> thenByDate0Desc() {
+  QueryBuilder<MensaDay, MensaDay, QAfterSortBy> thenByDateDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'date0', Sort.desc);
+      return query.addSortBy(r'date', Sort.desc);
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterSortBy> thenById() {
+  QueryBuilder<MensaDay, MensaDay, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterSortBy> thenByIdDesc() {
+  QueryBuilder<MensaDay, MensaDay, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 }
 
-extension PlanQueryWhereDistinct on QueryBuilder<Plan, Plan, QDistinct> {
-  QueryBuilder<Plan, Plan, QDistinct> distinctByDate0() {
+extension MensaDayQueryWhereDistinct
+    on QueryBuilder<MensaDay, MensaDay, QDistinct> {
+  QueryBuilder<MensaDay, MensaDay, QDistinct> distinctByDate() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'date0');
+      return query.addDistinctBy(r'date');
     });
   }
 
-  QueryBuilder<Plan, Plan, QDistinct> distinctByIndices() {
+  QueryBuilder<MensaDay, MensaDay, QDistinct> distinctByMealTypes() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'indices');
+      return query.addDistinctBy(r'mealTypes');
     });
   }
 }
 
-extension PlanQueryProperty on QueryBuilder<Plan, Plan, QQueryProperty> {
-  QueryBuilder<Plan, int, QQueryOperations> idProperty() {
+extension MensaDayQueryProperty
+    on QueryBuilder<MensaDay, MensaDay, QQueryProperty> {
+  QueryBuilder<MensaDay, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<Plan, DateTime?, QQueryOperations> date0Property() {
+  QueryBuilder<MensaDay, DateTime, QQueryOperations> dateProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'date0');
+      return query.addPropertyName(r'date');
     });
   }
 
-  QueryBuilder<Plan, List<int?>, QQueryOperations> indicesProperty() {
+  QueryBuilder<MensaDay, List<int>, QQueryOperations> mealTypesProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'indices');
+      return query.addPropertyName(r'mealTypes');
     });
   }
 }

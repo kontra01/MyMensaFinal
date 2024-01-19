@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:mymensa/widgets/storage/datemap.dart';
+import 'package:mymensa/main.dart';
+import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'package:mymensa/widgets/storage/meal.dart';
+import 'package:mymensa/widgets/storage/mealtype.dart';
+import 'package:mymensa/widgets/storage/mensaday.dart';
 import 'package:mymensa/widgets/storage/plan.dart';
 
 const double border = 30;
@@ -23,10 +26,9 @@ const List<String> months = [
 
 // ignore: must_be_immutable
 class CustomPopUp extends StatefulWidget {
-  Isar mealSchema;
-  Isar planSchema;
+  AllSchemata allSchemata;
   Id planId;
-  CustomPopUp(this.mealSchema, this.planSchema, this.planId, {super.key});
+  CustomPopUp(this.allSchemata, this.planId, {super.key});
 
   @override
   State<CustomPopUp> createState() => _CustomPopUpState();
@@ -78,7 +80,8 @@ class _CustomPopUpState extends State<CustomPopUp> {
                   Container(
                     padding: const EdgeInsets.all(16.0),
                     child: FutureBuilder<Plan?>(
-                        future: widget.planSchema.plans.get(widget.planId),
+                        future: widget.allSchemata.planSchema.plans
+                            .get(widget.planId),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return Column(
@@ -203,7 +206,7 @@ class _CustomPopUpState extends State<CustomPopUp> {
               List<Id> possibleMealIds = [];
               if (filterOptions['Meals']!) {
                 List<Meal> allMeals =
-                    await widget.mealSchema.meals.where().findAll();
+                    await widget.allSchemata.mealSchema.meals.where().findAll();
                 for (Meal m in allMeals) {
                   if (recimatchAll(querys, m.name.toLowerCase()))
                     possibleMealIds.add(m.id);
@@ -213,7 +216,9 @@ class _CustomPopUpState extends State<CustomPopUp> {
               if (filterOptions['Categories']!) {
                 // To be worked on
               }
-              for (MensaDay md in plan.getAllNonNulls()) {
+              for (Id mdId in plan.getAllNonNulls()) {
+                MensaDay md =
+                    (await allSchemata.mensadaySchema.mensaDays.get(mdId))!;
                 print(md.date);
                 bool? matchesDate;
 
@@ -222,26 +227,26 @@ class _CustomPopUpState extends State<CustomPopUp> {
                 }
                 if (filterOptions['Meal Types']! || filterOptions['Meals']!) {
                   for (int i = 0; i < md.mealTypes.length; i++) {
+                    MealType mt = (await allSchemata.mealtypeSchema.mealTypes
+                        .get(md.mealTypes[i]))!;
                     Iterable mealTypeMatches =
-                        querys.map((q) => reciMatch(q, md.mealTypes[i].name));
+                        querys.map((q) => reciMatch(q, mt.name));
                     if (filterOptions['Meal Types']! &&
                         mealTypeMatches.contains(true)) {
                       for (int match = 0;
                           match < mealTypeMatches.length;
                           match++) {
                         if (!mealTypeMatches.elementAt(match)) continue;
-                        resultItems.add(ResultItemWidget(
-                            md.date,
-                            markup("", md.mealTypes[i].name.toUpperCase(),
-                                querys[match])));
+                        resultItems.add(ResultItemWidget(md.date,
+                            markup("", mt.name.toUpperCase(), querys[match])));
                       }
                     }
                     if (filterOptions['Meals']!) {
-                      for (int m = 0; m < md.mealTypes[i].mealIds.length; m++) {
-                        Id mId = md.mealTypes[i].mealIds[m];
+                      for (int m = 0; m < mt.mealIds.length; m++) {
+                        Id mId = mt.mealIds[m];
                         if (!possibleMealIds.contains(mId)) continue;
                         Meal? therebyMeal =
-                            await widget.mealSchema.meals.get(mId);
+                            await widget.allSchemata.mealSchema.meals.get(mId);
                         if (therebyMeal == null) continue;
                         Iterable mealMatches =
                             querys.map((q) => reciMatch(q, therebyMeal.name));

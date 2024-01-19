@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'search.dart';
 import 'variables.dart';
 
@@ -15,12 +16,11 @@ final ButtonStyle footerButton = ElevatedButton.styleFrom(
 class FooterWidget extends StatelessWidget {
   Function dateFocusSetter;
   Function dateFocusGetter;
-  Isar mealSchema;
-  Isar planSchema;
+  AllSchemata allSchemata;
   Id planId;
 
-  FooterWidget(this.mealSchema, this.planSchema, this.planId,
-      this.dateFocusGetter, this.dateFocusSetter,
+  FooterWidget(
+      this.allSchemata, this.planId, this.dateFocusGetter, this.dateFocusSetter,
       {super.key});
 
   @override
@@ -32,8 +32,7 @@ class FooterWidget extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                _showPopUpWindow(
-                    context, CustomPopUp(mealSchema, planSchema, planId));
+                _showPopUpWindow(context, CustomPopUp(allSchemata, planId));
               },
               style: footerButton,
               child: const Icon(Icons.search),
