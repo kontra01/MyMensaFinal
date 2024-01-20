@@ -1,18 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:isar/isar.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
-import 'package:mymensa/widgets/storage/meal.dart';
-import 'package:mymensa/widgets/storage/plan.dart';
 import 'package:path_provider/path_provider.dart';
 import 'widgets/footer.dart';
 import 'widgets/mainview.dart';
 import 'widgets/variables.dart';
-
-late AllSchemata allSchemata;
-late Directory dir;
-bool schemataAreInitialized = false;
 
 void main() {
   runApp(const MyMensa());
@@ -33,6 +26,9 @@ class MyMensa extends StatefulWidget {
 
 class _MyMensaState extends State<MyMensa> {
   int dateFocus = 0;
+  AllSchemata? allSchemata;
+  late Directory dir;
+  bool schemataAreInitialized = false;
 
   void changeContainer(int index) {}
 
@@ -49,8 +45,13 @@ class _MyMensaState extends State<MyMensa> {
   Future<bool> initializeSchemata() async {
     print("initialization started.");
     dir = await getApplicationDocumentsDirectory();
+    if (allSchemata != null) {
+      return true;
+      //print("closing all...");
+      //await allSchemata!.closeAll();
+    }
     allSchemata = AllSchemata(dir);
-    return await allSchemata.initialize();
+    return await allSchemata!.initialize();
   }
 
   @override
@@ -62,7 +63,7 @@ class _MyMensaState extends State<MyMensa> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: "My Mensa",
+        title: "MyMensa",
         theme: ThemeData(
             textTheme:
                 GoogleFonts.lexendTextTheme(Theme.of(context).textTheme)),
@@ -73,9 +74,9 @@ class _MyMensaState extends State<MyMensa> {
                 return Scaffold(
                     appBar: getAppBar(),
                     body: MainView(
-                        allSchemata, 1, dateFocusGetter, dateFocusSetter),
+                        allSchemata!, 1, dateFocusGetter, dateFocusSetter),
                     bottomNavigationBar: FooterWidget(
-                        allSchemata, 1, dateFocusGetter, dateFocusSetter));
+                        allSchemata!, 1, dateFocusGetter, dateFocusSetter));
               } else {
                 return const Center(
                   child: Text("loading..."),
@@ -102,10 +103,7 @@ class _MyMensaState extends State<MyMensa> {
           // settings button
           style: headerButton,
           icon: const Icon(Icons.settings),
-          onPressed: () async {
-            print(
-                (await allSchemata.planSchema.plans.get(1))!.getAllNonNulls());
-          },
+          onPressed: () {},
         ),
         IconButton(
           // personal button

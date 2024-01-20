@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
-import 'package:mymensa/main.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'storage/mealtype.dart';
 import 'storage/mensaday.dart';
@@ -110,37 +109,41 @@ class _MainView extends State<MainView> {
     MealType mt4 = MealType("Beilagen", [4], 0, 13, 0);
     MealType mt5 = MealType("Desserts", [5], 0, 13, 30);
     MealType mt6 = MealType("Prima Klima", [3], 0, 13, 0);
+    await widget.allSchemata.mealtypeSchema.writeTxn(() async {
+      await widget.allSchemata.mealtypeSchema.mealTypes.clear();
+      await widget.allSchemata.mealtypeSchema.mealTypes
+          .putAll([mt1, mt2, mt3, mt4, mt5, mt6]);
+    });
 
     // the following is mostly for default data generating
     await widget.allSchemata.planSchema.writeTxn(() async {
       await widget.allSchemata.planSchema.plans.clear();
     });
     Plan? planT = await widget.allSchemata.planSchema.plans.get(planId);
-    print(planT);
     if (planT == null) {
+      MensaDay md1 = MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1.id]);
+      MensaDay md2 =
+          MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1.id, mt4.id]);
+      MensaDay md3 = MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2.id]);
+      MensaDay md4 =
+          MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3.id, mt5.id]);
+      MensaDay md5 =
+          MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6.id, mt4.id]);
+
+      await widget.allSchemata.mensadaySchema.writeTxn(() async {
+        await widget.allSchemata.mensadaySchema.mensaDays.clear();
+        await widget.allSchemata.mensadaySchema.mensaDays
+            .putAll([md1, md2, md3, md4, md5]);
+      });
       plan = Plan();
-      plan.addAll(widget.allSchemata, [
-        MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1.id]),
-        MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1.id, mt4.id]),
-        MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2.id]),
-        MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3.id, mt5.id]),
-        MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6.id, mt4.id])
-      ]);
+      plan.addAll([md1, md2, md3, md4, md5]);
       await widget.allSchemata.planSchema.writeTxn(() async {
-        widget.allSchemata.planSchema.plans.put(plan);
+        await widget.allSchemata.planSchema.plans.put(plan);
       });
     } else {
       plan = planT;
     }
-
     return true;
-  }
-
-  void updatePlan() async {
-    await widget.allSchemata.planSchema.writeTxn(() async {
-      await widget.allSchemata.planSchema.plans.delete(planId);
-      await widget.allSchemata.planSchema.plans.put(plan);
-    });
   }
 
   late int selection; // variable that determines which slide the user is on
@@ -211,7 +214,8 @@ class _MainView extends State<MainView> {
   Future<Widget> generateViewFocusDay(pageIndex) async {
     MensaDay? currentMensaDay = plan[pageIndex] == null
         ? null
-        : (await allSchemata.mensadaySchema.mensaDays.get(plan[pageIndex]!));
+        : (await widget.allSchemata.mensadaySchema.mensaDays
+            .get(plan[pageIndex]!));
     if (currentMensaDay == null) {
       return const Text("No meals entered for this date.");
     }
@@ -219,7 +223,6 @@ class _MainView extends State<MainView> {
     if (currentTypes.isEmpty) {
       return const Text("No meals entered for this date.");
     }
-
     // THIS PART IS THE ACTUAL BOXES
     return Container(
         margin: EdgeInsets.symmetric(horizontal: 16.0),
@@ -257,7 +260,7 @@ class _MainView extends State<MainView> {
 
   Widget generateTypeBox(Id mealTypeId) {
     return FutureBuilder<MealType?>(
-      future: allSchemata.mealtypeSchema.mealTypes.get(mealTypeId),
+      future: widget.allSchemata.mealtypeSchema.mealTypes.get(mealTypeId),
       builder: (BuildContext context, AsyncSnapshot<MealType?> snapshot) {
         if (snapshot.hasData && snapshot.data != null) {
           return Column(

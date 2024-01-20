@@ -69,8 +69,9 @@ Plan _planDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Plan();
-  object.date0 = reader.readDateTimeOrNull(offsets[0]);
+  object.date0 = reader.readDateTime(offsets[0]);
   object.id = id;
+  object.indices = reader.readLongList(offsets[1]) ?? [];
   return object;
 }
 
@@ -82,9 +83,9 @@ P _planDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readLongOrNullList(offset) ?? []) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -178,24 +179,7 @@ extension PlanQueryWhere on QueryBuilder<Plan, Plan, QWhereClause> {
 }
 
 extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0IsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'date0',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0IsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'date0',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0EqualTo(
-      DateTime? value) {
+  QueryBuilder<Plan, Plan, QAfterFilterCondition> date0EqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'date0',
@@ -205,7 +189,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 
   QueryBuilder<Plan, Plan, QAfterFilterCondition> date0GreaterThan(
-    DateTime? value, {
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -218,7 +202,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 
   QueryBuilder<Plan, Plan, QAfterFilterCondition> date0LessThan(
-    DateTime? value, {
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -231,8 +215,8 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 
   QueryBuilder<Plan, Plan, QAfterFilterCondition> date0Between(
-    DateTime? lower,
-    DateTime? upper, {
+    DateTime lower,
+    DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -299,24 +283,8 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.elementIsNull(
-        property: r'indices',
-      ));
-    });
-  }
-
-  QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.elementIsNotNull(
-        property: r'indices',
-      ));
-    });
-  }
-
   QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementEqualTo(
-      int? value) {
+      int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'indices',
@@ -326,7 +294,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 
   QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementGreaterThan(
-    int? value, {
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -339,7 +307,7 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 
   QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementLessThan(
-    int? value, {
+    int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -352,8 +320,8 @@ extension PlanQueryFilter on QueryBuilder<Plan, Plan, QFilterCondition> {
   }
 
   QueryBuilder<Plan, Plan, QAfterFilterCondition> indicesElementBetween(
-    int? lower,
-    int? upper, {
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -518,13 +486,13 @@ extension PlanQueryProperty on QueryBuilder<Plan, Plan, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Plan, DateTime?, QQueryOperations> date0Property() {
+  QueryBuilder<Plan, DateTime, QQueryOperations> date0Property() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'date0');
     });
   }
 
-  QueryBuilder<Plan, List<int?>, QQueryOperations> indicesProperty() {
+  QueryBuilder<Plan, List<int>, QQueryOperations> indicesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'indices');
     });

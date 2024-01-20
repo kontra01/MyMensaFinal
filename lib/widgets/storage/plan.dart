@@ -1,24 +1,19 @@
 import "package:isar/isar.dart";
-import "allSchemata.dart";
 import "mensaday.dart";
-
+// STOPP
 part "plan.g.dart";
 
 @collection
 class Plan {
   Id id = Isar.autoIncrement;
   // -> List<Id> with Id being a Isar object id for the meals.
-  DateTime? date0;
+  DateTime date0 = DateTime(0);
 
-  final List<Id?> indices = [];
+  List<Id> indices = [];
 
-  void add(AllSchemata schemata, MensaDay day) async {
+  void add(MensaDay day) async {
     day.toUtc();
-    await schemata.mensadaySchema.writeTxn(() async {
-      await schemata.mensadaySchema.mensaDays.put(day);
-    });
     int thrIndex = getAccountedIndex(day.date);
-
     if (thrIndex < 0) {
       expand(-thrIndex + 1);
       thrIndex = 0;
@@ -39,7 +34,9 @@ class Plan {
   /// Returns [MensaDay] for provided [index]. If [DateTime] is not added for [index] yet, null is returned.
 
   Id? operator [](int index) {
-    return index < 0 || index >= indices.length ? null : indices[index];
+    return index < 0 || index >= indices.length
+        ? null
+        : (indices[index] < 0 ? null : indices[index]);
   }
 
   /// Returns [DateTime] for provided [DateTime]. If [DateTime] is not added for [DateTime] yet, null is returned.
@@ -49,10 +46,15 @@ class Plan {
     return this[getAccountedIndex(date)];
   }
 
+  bool date0isNull() => date0.year == 0;
+  void date0toNull() {
+    date0 = DateTime(0);
+  }
+
   DateTime getAccountedDate(int index) {
-    return date0 == null
+    return date0isNull()
         ? DateTime.now().toUtc()
-        : DateTime(date0!.year, date0!.month, date0!.day + index);
+        : DateTime(date0.year, date0.month, date0.day + index);
   }
 
   int? getIndex(DateTime date) {
@@ -66,15 +68,15 @@ class Plan {
   }
 
   int getAccountedIndex(DateTime date) {
-    if (date0 == null) return 0;
-    return date.toUtc().difference(date0!).inDays;
+    if (date0isNull()) return 0;
+    return date.toUtc().difference(date0).inDays;
   }
 
   int? getUpperNonNull(int index) {
     if (indices.isEmpty || indices.length < index + 1) return null;
 
     for (int j = index + 1; j < indices.length; j++) {
-      if (indices[j] != null) return j;
+      if (this[j] != null) return j;
     }
 
     return null;
@@ -84,7 +86,7 @@ class Plan {
     if (index <= 0 || indices.isEmpty) return null;
 
     for (int j = index - 1; j >= 0; j--) {
-      if (indices[j] != null) return j;
+      if (this[j] != null) return j;
     }
 
     return null;
@@ -95,24 +97,24 @@ class Plan {
 
     if (expansion >= 0 && expansion < indices.length) return;
 
-    if (index < 0 && date0 != null) {
-      date0 = DateTime(date0!.year, date0!.month, date0!.day + index);
+    if (index < 0 && !date0isNull()) {
+      date0 = DateTime(date0.year, date0.month, date0.day + index);
     }
 
     indices.insertAll(index < 0 ? 0 : indices.length,
-        List<Id?>.generate(expansion.abs(), (i) => null));
+        List<Id>.generate(expansion.abs(), (i) => -1));
   }
 
-  void addAll(AllSchemata allSchemata, [List<MensaDay> mensaDays = const []]) {
+  void addAll([List<MensaDay> mensaDays = const []]) {
     for (MensaDay md in mensaDays) {
-      add(allSchemata, md);
+      add(md);
     }
   }
 
   List<Id> getAllNonNulls() {
     List<Id> nonNulls = [];
-    for (Id? d in indices) {
-      if (d != null) nonNulls.add(d);
+    for (int d = 0; d < indices.length; d++) {
+      if (this[d] != null) nonNulls.add(d);
     }
     return nonNulls;
   }

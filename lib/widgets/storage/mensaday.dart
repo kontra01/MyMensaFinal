@@ -10,6 +10,7 @@ class MensaDay {
   List<Id> mealTypes = [];
   DateTime date;
   MensaDay(this.date, {this.mealTypes = const []});
+
   void add(Isar mealTypeSchema, MealType mt) async {
     await mealTypeSchema.writeTxn(() async {
       await mealTypeSchema.mealTypes.put(mt);

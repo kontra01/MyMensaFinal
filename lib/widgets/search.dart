@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:mymensa/main.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'package:mymensa/widgets/storage/meal.dart';
 import 'package:mymensa/widgets/storage/mealtype.dart';
@@ -208,8 +207,9 @@ class _CustomPopUpState extends State<CustomPopUp> {
                 List<Meal> allMeals =
                     await widget.allSchemata.mealSchema.meals.where().findAll();
                 for (Meal m in allMeals) {
-                  if (recimatchAll(querys, m.name.toLowerCase()))
+                  if (recimatchAll(querys, m.name.toLowerCase())) {
                     possibleMealIds.add(m.id);
+                  }
                 }
                 print(possibleMealIds);
               }
@@ -217,8 +217,13 @@ class _CustomPopUpState extends State<CustomPopUp> {
                 // To be worked on
               }
               for (Id mdId in plan.getAllNonNulls()) {
-                MensaDay md =
-                    (await allSchemata.mensadaySchema.mensaDays.get(mdId))!;
+                print("checking one");
+                MensaDay? md =
+                    await widget.allSchemata.mensadaySchema.mensaDays.get(mdId);
+                if (md == null) {
+                  print("isNull");
+                  continue;
+                }
                 print(md.date);
                 bool? matchesDate;
 
@@ -227,8 +232,12 @@ class _CustomPopUpState extends State<CustomPopUp> {
                 }
                 if (filterOptions['Meal Types']! || filterOptions['Meals']!) {
                   for (int i = 0; i < md.mealTypes.length; i++) {
-                    MealType mt = (await allSchemata.mealtypeSchema.mealTypes
-                        .get(md.mealTypes[i]))!;
+                    MealType? mt = await widget
+                        .allSchemata.mealtypeSchema.mealTypes
+                        .get(md.mealTypes[i]);
+                    if (mt == null) {
+                      continue;
+                    }
                     Iterable mealTypeMatches =
                         querys.map((q) => reciMatch(q, mt.name));
                     if (filterOptions['Meal Types']! &&
@@ -266,7 +275,7 @@ class _CustomPopUpState extends State<CustomPopUp> {
                   resultItems.add(ResultItemWidget(md.date, Text("")));
                 }
               }
-
+              print("done");
               return resultItems;
             })(), builder: (context, snapshot) {
               if (snapshot.hasData) {
