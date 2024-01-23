@@ -9,31 +9,31 @@ import 'package:mymensa/widgets/storage/plan.dart';
 const double border = 30;
 
 const List<String> months = [
-  "january",
-  "february",
-  "march",
-  "april",
-  "may",
-  "juny",
-  "juli",
-  "august",
-  "september",
-  "october",
-  "november",
-  "december"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "Juny",
+  "Juli",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
 ];
 
 // ignore: must_be_immutable
-class CustomPopUp extends StatefulWidget {
+class SearchPopUp extends StatefulWidget {
   AllSchemata allSchemata;
   Id planId;
-  CustomPopUp(this.allSchemata, this.planId, {super.key});
+  SearchPopUp(this.allSchemata, this.planId, {super.key});
 
   @override
-  State<CustomPopUp> createState() => _CustomPopUpState();
+  State<SearchPopUp> createState() => _SearchPopUp();
 }
 
-class _CustomPopUpState extends State<CustomPopUp> {
+class _SearchPopUp extends State<SearchPopUp> {
   bool showFilterOptions = false;
   Map<String, bool> filterOptions = {
     'Meals': true,
@@ -182,7 +182,7 @@ class _CustomPopUpState extends State<CustomPopUp> {
           DateTime(today.year, today.month, today.day - 1).toUtc();
       if (DateUtils.isSameDay(yester, date)) return true;
     }
-    if (recimatchAll(querys, months[date.month - 1])) {
+    if (recimatchAll(querys, months[date.month - 1].toLowerCase())) {
       return true;
     }
 

@@ -32,7 +32,7 @@ class FooterWidget extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                _showPopUpWindow(context, CustomPopUp(allSchemata, planId));
+                _showPopUpWindow(context, SearchPopUp(allSchemata, planId));
               },
               style: footerButton,
               child: const Icon(Icons.search),
