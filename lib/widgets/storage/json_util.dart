@@ -25,7 +25,8 @@ Future<Plan> loadJSON(AllSchemata allSchemata, Id planId) async {
 
   final days = data["Days"];
   for (var day in days) {
-    date = dateHelper(day["date"]);
+    date = dateHelper(day["date"]).add(const Duration(days: 1));
+    print(date);
     List<Id> mealTypeIds = [];
 
     for (var mealType in day["mealTypes"]) {

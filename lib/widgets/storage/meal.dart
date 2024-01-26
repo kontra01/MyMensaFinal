@@ -64,6 +64,10 @@ class Meal {
   }
 
   String getSubtitle() {
-    return "Price: ${price}0 € \t ${rating == null ? "" : "Rating: $rating/10"}"; // rating.toString()
+    String pr = price.toString();
+    if (pr.length == 3) {
+      pr = "${pr}0";
+    }
+    return "Price: ${pr} € \t ${rating == null ? "" : "Rating: $rating/10"}"; // rating.toString()
   }
 }

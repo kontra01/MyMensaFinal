@@ -56,7 +56,6 @@ class MainViewState extends State<MainView> {
   late Id planId;
   bool isInitialized = false;
   late Function appBarStateSetter;
-  late Function subtitleSetter;
   List<Function> pageViewFocus = const [];
 
   late int selection; // variable that determines which slide the user is on
@@ -223,6 +222,7 @@ class MainViewState extends State<MainView> {
     if (currentMensaDay == null) {
       return generateText("No meals entered for this date.");
     }
+    print(currentMensaDay.date);
     List<Id>? currentTypes = currentMensaDay.mealTypes;
     if (currentTypes.isEmpty) {
       return generateText("No meals entered for this date.");
@@ -270,7 +270,7 @@ class MainViewState extends State<MainView> {
           return Column(
             children: [
               Container(
-                color: Colors.redAccent,
+                color: Colors.grey,
                 padding: const EdgeInsets.all(14.0),
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -302,140 +302,142 @@ class MainViewState extends State<MainView> {
             if (meal == null) {
               return generateText("No meals entered for this date.");
             }
-            return ListTile(
-              title: Text(meal.name),
-              subtitle: StatefulBuilder(builder: (context, subtitleSetter) {
-                this.subtitleSetter = subtitleSetter;
-                return Text(meal.getSubtitle());
-              }),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    // Edit button
-                    icon: const Icon(Icons.edit),
-                    onPressed: () async {
-                      // partial from https://stackoverflow.com/questions/54480641/flutter-how-to-create-forms-in-popup
-                      final _formKey = GlobalKey<FormState>();
-                      await showDialog<void>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                                content: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: <Widget>[
-                                    Positioned(
-                                      right: -40,
-                                      top: -80,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.close,
-                                            color: Colors.white),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ),
-                                    Form(
-                                      key: _formKey,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          Padding(
-                                            padding: const EdgeInsets.all(8),
-                                            child: TextFormField(
-                                              controller: descriptionController,
-                                            ), //init value: meal.getDesription()
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8),
-                                            child: ElevatedButton(
-                                              child: const Text('Submit'),
-                                              onPressed: () {
-                                                String descr =
-                                                    descriptionController.text;
-                                                meal.setDesription(descr);
-                                                dbInsert(meal);
 
-                                                /* if (_formKey.currentState!.validate()) {
+            return StatefulBuilder(builder: (context, subtitleSetter) {
+              return ListTile(
+                title: Text(meal.name),
+                subtitle: Text(meal.getSubtitle()),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      // Edit button
+                      icon: const Icon(Icons.edit),
+                      onPressed: () async {
+                        // partial from https://stackoverflow.com/questions/54480641/flutter-how-to-create-forms-in-popup
+                        final _formKey = GlobalKey<FormState>();
+                        await showDialog<void>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                                  content: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: <Widget>[
+                                      Positioned(
+                                        right: -40,
+                                        top: -80,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close,
+                                              color: Colors.white),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ),
+                                      Form(
+                                        key: _formKey,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: TextFormField(
+                                                controller:
+                                                    descriptionController,
+                                              ), //init value: meal.getDesription()
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: ElevatedButton(
+                                                child: const Text('Submit'),
+                                                onPressed: () {
+                                                  String descr =
+                                                      descriptionController
+                                                          .text;
+                                                  meal.setDesription(descr);
+                                                  dbInsert(meal);
+                                                  Navigator.of(context).pop();
+                                                  /* if (_formKey.currentState!.validate()) {
                                           _formKey.currentState!.save();
                                         } */
-                                              },
+                                                },
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ));
+                      },
+                    ),
+                    IconButton(
+                      // Rate button
+                      icon: const Icon(Icons.star),
+                      onPressed: () async {
+                        // partial from https://stackoverflow.com/questions/54480641/flutter-how-to-create-forms-in-popup
+                        final _formKey = GlobalKey<FormState>();
+                        await showDialog<void>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                                  content: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: <Widget>[
+                                      Positioned(
+                                        right: -40,
+                                        top: -80,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close,
+                                              color: Colors.white),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ),
+                                      Form(
+                                        key: _formKey,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: TextFormField(
+                                                  controller: ratingController,
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  inputFormatters: <TextInputFormatter>[
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly
+                                                  ]),
                                             ),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ));
-                    },
-                  ),
-                  IconButton(
-                    // Rate button
-                    icon: const Icon(Icons.star),
-                    onPressed: () async {
-                      // partial from https://stackoverflow.com/questions/54480641/flutter-how-to-create-forms-in-popup
-                      final _formKey = GlobalKey<FormState>();
-                      await showDialog<void>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                                content: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: <Widget>[
-                                    Positioned(
-                                      right: -40,
-                                      top: -80,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.close,
-                                            color: Colors.white),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ),
-                                    Form(
-                                      key: _formKey,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          Padding(
-                                            padding: const EdgeInsets.all(8),
-                                            child: TextFormField(
-                                                controller: ratingController,
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                inputFormatters: <TextInputFormatter>[
-                                                  FilteringTextInputFormatter
-                                                      .digitsOnly
-                                                ]),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8),
-                                            child: ElevatedButton(
-                                              child: const Text('Submit'),
-                                              onPressed: () {
-                                                int rating = int.parse(
-                                                    ratingController.text);
-                                                meal.setRating(rating);
-                                                dbInsert(meal);
-                                                subtitleSetter(() {});
-
-                                                /* if (_formKey.currentState!.validate()) {
+                                            Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: ElevatedButton(
+                                                child: const Text('Submit'),
+                                                onPressed: () {
+                                                  int rating = int.parse(
+                                                      ratingController.text);
+                                                  meal.setRating(rating);
+                                                  dbInsert(meal);
+                                                  subtitleSetter(() {});
+                                                  Navigator.of(context).pop();
+                                                  /* if (_formKey.currentState!.validate()) {
                                                   _formKey.currentState!.save();
                                                 } */
-                                              },
-                                            ),
-                                          )
-                                        ],
+                                                },
+                                              ),
+                                            )
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ));
-                    },
-                  )
-                ],
-              ),
-            );
+                                    ],
+                                  ),
+                                ));
+                      },
+                    )
+                  ],
+                ),
+              );
+            });
           } else {
             return generateText('No meal details available');
           }

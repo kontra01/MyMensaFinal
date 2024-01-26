@@ -213,6 +213,7 @@ class _SearchPopUp extends State<SearchPopUp> {
                     possibleMealIds.add(m.id);
                   }
                 }
+                print(possibleMealIds);
               }
               if (filterOptions['Categories']!) {
                 // To be worked on
