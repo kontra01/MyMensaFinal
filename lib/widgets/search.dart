@@ -284,6 +284,7 @@ class _SearchPopUp extends State<SearchPopUp> {
                 if (resultItems.isNotEmpty) {
                   return SingleChildScrollView(
                       child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: resultItems,
                   ));
                 }

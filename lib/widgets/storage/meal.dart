@@ -29,6 +29,40 @@ class Meal {
     return Meal(name, null);
   }
 
+  Id getId() {
+    return id;
+  }
+
+  void setRating(int? rating) {
+    rating ??= 0;
+    this.rating = (rating % 11);
+  }
+
+  int? getRating() {
+    return rating;
+  }
+
+  void setDesription(String? txt) {
+    // if it should have a max length ...
+    description = txt;
+  }
+
+  String? getDescription() {
+    if (description != null) {
+      return description;
+    } else {
+      return "";
+    }
+  }
+
+  double? getPrice() {
+    return price;
+  }
+
+  void setPrice(double? price) {
+    this.price = price;
+  }
+
   String getSubtitle() {
     return "Price: ${price}0 € \t ${rating == null ? "" : "Rating: $rating/10"}"; // rating.toString()
   }

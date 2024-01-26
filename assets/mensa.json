@@ -1,0 +1,87 @@
+{
+    "name": "THU_MENSA",
+    "Days": [
+        {
+            "date": "2024-01-26",
+            "mealTypes": [
+                {
+                    "name": "Primaklima",
+                    "meals": [
+                        {
+                            "name": "Kartoffelgulasch Schnittlauch-Joghurtdip, Baguette",
+                            "price": 4.4
+                        }
+                    ]
+                },
+                    {
+                        "name": "Topf + Pfanne",
+                        "meals": [
+                            {
+                                "name": "Tortilla mit Gemüse und Sojastreifen gefüllt",
+                                "price": 3.6
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Fleisch + Fisch",
+                        "meals": [
+                            {
+                                "name": "Schweineschnitzel gebacken mit Bratensoße",
+                                "price": 4.7
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Sattmacher",
+                        "meals": [
+                            {
+                                "name": "Indischer Gemüsebulgur",
+                                "price": 2.2
+                            }
+                        ]
+                    }
+            ]
+        },
+        {
+            "date": "2024-01-29",
+            "mealTypes": [
+                {
+                    "name": "Primaklima",
+                    "meals": [
+                        {
+                            "name": "Gemüsebällchen  auf Tomatenspaghetti",
+                            "price": 4.65
+                        }
+                    ]
+                },
+                    {
+                        "name": "Topf + Pfanne",
+                        "meals": [
+                            {
+                                "name": "Süßkartoffelgratin mit Wirsing und Bergkäse",
+                                "price": 3.8
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Fleisch + Fisch",
+                        "meals": [
+                            {
+                                "name": "Maultaschen-Auflauf mit Champignons",
+                                "price": 4.6
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Sattmacher",
+                        "meals": [
+                            {
+                                "name": "Spirelli mit Champignonrahmsoße",
+                                "price": 2.2
+                            }
+                        ]
+                    }
+            ]
+        }
+    ]
+  }

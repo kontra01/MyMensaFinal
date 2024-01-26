@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:mymensa/widgets/generates.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
+import 'package:mymensa/widgets/storage/json_util.dart';
 import 'storage/mealtype.dart';
 import 'storage/mensaday.dart';
 import 'storage/plan.dart';
@@ -54,6 +56,7 @@ class MainViewState extends State<MainView> {
   late Id planId;
   bool isInitialized = false;
   late Function appBarStateSetter;
+  late Function subtitleSetter;
   List<Function> pageViewFocus = const [];
 
   late int selection; // variable that determines which slide the user is on
@@ -64,6 +67,8 @@ class MainViewState extends State<MainView> {
   // day = 0; week = 1; month = 2; year = 3;
 
   late PageController controller; // for the sliding effect
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController ratingController = TextEditingController();
 
   MainViewState() {
     pageViewFocus = [
@@ -103,6 +108,7 @@ class MainViewState extends State<MainView> {
   }
 
   Future<bool> initialize() async {
+    /*
     await widget.allSchemata.mealSchema.writeTxn(() async {
       await widget.allSchemata.mealSchema.meals.clear();
       await widget.allSchemata.mealSchema.meals.putAll([
@@ -127,32 +133,14 @@ class MainViewState extends State<MainView> {
       await widget.allSchemata.mealtypeSchema.mealTypes
           .putAll([mt1, mt2, mt3, mt4, mt5, mt6]);
     });
-
+    */
     // the following is mostly for default data generating
     await widget.allSchemata.planSchema.writeTxn(() async {
       await widget.allSchemata.planSchema.plans.clear();
     });
     Plan? planT = await widget.allSchemata.planSchema.plans.get(planId);
     if (planT == null) {
-      MensaDay md1 = MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1.id]);
-      MensaDay md2 =
-          MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1.id, mt4.id]);
-      MensaDay md3 = MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2.id]);
-      MensaDay md4 =
-          MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3.id, mt5.id]);
-      MensaDay md5 =
-          MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6.id, mt4.id]);
-
-      await widget.allSchemata.mensadaySchema.writeTxn(() async {
-        await widget.allSchemata.mensadaySchema.mensaDays.clear();
-        await widget.allSchemata.mensadaySchema.mensaDays
-            .putAll([md1, md2, md3, md4, md5]);
-      });
-      plan = Plan();
-      plan.addAll([md1, md2, md3, md4, md5]);
-      await widget.allSchemata.planSchema.writeTxn(() async {
-        await widget.allSchemata.planSchema.plans.put(plan);
-      });
+      plan = await loadJSON(widget.allSchemata, planId);
     } else {
       plan = planT;
     }
@@ -316,15 +304,133 @@ class MainViewState extends State<MainView> {
             }
             return ListTile(
               title: Text(meal.name),
-              subtitle: Text(meal.getSubtitle()),
+              subtitle: StatefulBuilder(builder: (context, subtitleSetter) {
+                this.subtitleSetter = subtitleSetter;
+                return Text(meal.getSubtitle());
+              }),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    // Edit button
+                    icon: const Icon(Icons.edit),
+                    onPressed: () async {
+                      // partial from https://stackoverflow.com/questions/54480641/flutter-how-to-create-forms-in-popup
+                      final _formKey = GlobalKey<FormState>();
+                      await showDialog<void>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                content: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: <Widget>[
+                                    Positioned(
+                                      right: -40,
+                                      top: -80,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close,
+                                            color: Colors.white),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ),
+                                    Form(
+                                      key: _formKey,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: TextFormField(
+                                              controller: descriptionController,
+                                            ), //init value: meal.getDesription()
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: ElevatedButton(
+                                              child: const Text('Submit'),
+                                              onPressed: () {
+                                                String descr =
+                                                    descriptionController.text;
+                                                meal.setDesription(descr);
+                                                dbInsert(meal);
+
+                                                /* if (_formKey.currentState!.validate()) {
+                                          _formKey.currentState!.save();
+                                        } */
+                                              },
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ));
+                    },
+                  ),
+                  IconButton(
                     // Rate button
                     icon: const Icon(Icons.star),
-                    onPressed: () {
-                      // TODO: rate from 1 to ten.
+                    onPressed: () async {
+                      // partial from https://stackoverflow.com/questions/54480641/flutter-how-to-create-forms-in-popup
+                      final _formKey = GlobalKey<FormState>();
+                      await showDialog<void>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                content: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: <Widget>[
+                                    Positioned(
+                                      right: -40,
+                                      top: -80,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close,
+                                            color: Colors.white),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ),
+                                    Form(
+                                      key: _formKey,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: TextFormField(
+                                                controller: ratingController,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: <TextInputFormatter>[
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly
+                                                ]),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: ElevatedButton(
+                                              child: const Text('Submit'),
+                                              onPressed: () {
+                                                int rating = int.parse(
+                                                    ratingController.text);
+                                                meal.setRating(rating);
+                                                dbInsert(meal);
+                                                subtitleSetter(() {});
+
+                                                /* if (_formKey.currentState!.validate()) {
+                                                  _formKey.currentState!.save();
+                                                } */
+                                              },
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ));
                     },
                   )
                 ],
@@ -344,5 +450,12 @@ class MainViewState extends State<MainView> {
     } catch (e) {
       return null;
     }
+  }
+
+  void dbInsert(Meal meal) async {
+    await widget.allSchemata.mealSchema.writeTxn(() async {
+      await widget.allSchemata.mealSchema.meals
+          .put(meal); // update meal. await ?, isar? ...
+    });
   }
 }
