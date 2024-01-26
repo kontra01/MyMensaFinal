@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:mymensa/widgets/generates.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
-import 'package:mymensa/widgets/storage/json_util.dart';
 import 'storage/mealtype.dart';
 import 'storage/mensaday.dart';
 import 'storage/plan.dart';
@@ -107,7 +106,6 @@ class MainViewState extends State<MainView> {
   }
 
   Future<bool> initialize() async {
-    /*
     await widget.allSchemata.mealSchema.writeTxn(() async {
       await widget.allSchemata.mealSchema.meals.clear();
       await widget.allSchemata.mealSchema.meals.putAll([
@@ -132,14 +130,32 @@ class MainViewState extends State<MainView> {
       await widget.allSchemata.mealtypeSchema.mealTypes
           .putAll([mt1, mt2, mt3, mt4, mt5, mt6]);
     });
-    */
+
     // the following is mostly for default data generating
     await widget.allSchemata.planSchema.writeTxn(() async {
       await widget.allSchemata.planSchema.plans.clear();
     });
     Plan? planT = await widget.allSchemata.planSchema.plans.get(planId);
     if (planT == null) {
-      plan = await loadJSON(widget.allSchemata, planId);
+      MensaDay md1 = MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1.id]);
+      MensaDay md2 =
+          MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1.id, mt4.id]);
+      MensaDay md3 = MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2.id]);
+      MensaDay md4 =
+          MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3.id, mt5.id]);
+      MensaDay md5 =
+          MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6.id, mt4.id]);
+
+      await widget.allSchemata.mensadaySchema.writeTxn(() async {
+        await widget.allSchemata.mensadaySchema.mensaDays.clear();
+        await widget.allSchemata.mensadaySchema.mensaDays
+            .putAll([md1, md2, md3, md4, md5]);
+      });
+      plan = Plan();
+      plan.addAll([md1, md2, md3, md4, md5]);
+      await widget.allSchemata.planSchema.writeTxn(() async {
+        await widget.allSchemata.planSchema.plans.put(plan);
+      });
     } else {
       plan = planT;
     }
