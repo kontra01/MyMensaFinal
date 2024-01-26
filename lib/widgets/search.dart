@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:mymensa/widgets/generates.dart';
+import 'package:mymensa/widgets/mainview.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'package:mymensa/widgets/storage/meal.dart';
 import 'package:mymensa/widgets/storage/mealtype.dart';
 import 'package:mymensa/widgets/storage/mensaday.dart';
 import 'package:mymensa/widgets/storage/plan.dart';
-
-const double border = 30;
 
 const List<String> months = [
   "January",
@@ -27,12 +27,14 @@ const List<String> months = [
 class SearchPopUp extends StatefulWidget {
   AllSchemata allSchemata;
   Id planId;
-  SearchPopUp(this.allSchemata, this.planId, {super.key});
+  MainView mv;
+  SearchPopUp(this.allSchemata, this.planId, this.mv, {super.key});
 
   @override
   State<SearchPopUp> createState() => _SearchPopUp();
 }
 
+// used the following for keyboard handling: https://stackoverflow.com/questions/48750361/flutter-detect-keyboard-open-and-close
 class _SearchPopUp extends State<SearchPopUp> {
   bool showFilterOptions = false;
   Map<String, bool> filterOptions = {
@@ -43,7 +45,7 @@ class _SearchPopUp extends State<SearchPopUp> {
   };
 
   TextEditingController searchController = TextEditingController();
-  Widget searchResults = Text("");
+  Widget searchResults = const Text("");
 
   late double wid;
   late double hei;
@@ -121,7 +123,7 @@ class _SearchPopUp extends State<SearchPopUp> {
                                         FilterButton(
                                           label: entry.key,
                                           selected: entry.value,
-                                          onSelected: (selected) {
+                                          isSelected: (selected) {
                                             setState(() {
                                               filterOptions[entry.key] =
                                                   selected;
@@ -132,7 +134,7 @@ class _SearchPopUp extends State<SearchPopUp> {
                                   ),
                                 ],
                                 const SizedBox(height: 8.0),
-                                searchResults,
+                                Flexible(child: searchResults)
                               ],
                             );
                           }
@@ -196,7 +198,7 @@ class _SearchPopUp extends State<SearchPopUp> {
   void updateSearchItems(String query, Plan? plan) {
     setState(() {
       searchResults = plan == null
-          ? Text("Plan not found.")
+          ? generateText("Plan either not selected or found.")
           : FutureBuilder<List<Widget>>(future: (() async {
               query = query.toLowerCase();
               List<String> querys = query.toLowerCase().split(" ");
@@ -211,20 +213,16 @@ class _SearchPopUp extends State<SearchPopUp> {
                     possibleMealIds.add(m.id);
                   }
                 }
-                print(possibleMealIds);
               }
               if (filterOptions['Categories']!) {
                 // To be worked on
               }
               for (Id mdId in plan.getAllNonNulls()) {
-                print("checking one");
                 MensaDay? md =
                     await widget.allSchemata.mensadaySchema.mensaDays.get(mdId);
                 if (md == null) {
-                  print("isNull");
                   continue;
                 }
-                print(md.date);
                 bool? matchesDate;
 
                 if (filterOptions['Dates']!) {
@@ -246,8 +244,10 @@ class _SearchPopUp extends State<SearchPopUp> {
                           match < mealTypeMatches.length;
                           match++) {
                         if (!mealTypeMatches.elementAt(match)) continue;
-                        resultItems.add(ResultItemWidget(md.date,
-                            markup("", mt.name.toUpperCase(), querys[match])));
+                        resultItems.add(ResultItemWidget(
+                            md.date,
+                            markup("", mt.name.toUpperCase(), querys[match]),
+                            widget.mv.jumpToDate));
                       }
                     }
                     if (filterOptions['Meals']!) {
@@ -263,56 +263,44 @@ class _SearchPopUp extends State<SearchPopUp> {
                         for (int match = 0;
                             match < mealMatches.length;
                             match++) {
-                          print("match");
                           if (!mealMatches.elementAt(match)) continue;
-                          resultItems.add(ResultItemWidget(md.date,
-                              markup("", therebyMeal.name, querys[match])));
+                          resultItems.add(ResultItemWidget(
+                              md.date,
+                              markup("", therebyMeal.name, querys[match]),
+                              widget.mv.jumpToDate));
                         }
                       }
                     }
                   }
                 } else if (matchesDate != null && matchesDate) {
-                  resultItems.add(ResultItemWidget(md.date, Text("")));
+                  resultItems.add(ResultItemWidget(
+                      md.date, const Text(""), widget.mv.jumpToDate));
                 }
               }
-              print("done");
               return resultItems;
             })(), builder: (context, snapshot) {
               if (snapshot.hasData) {
                 List<Widget> resultItems = snapshot.data!;
                 if (resultItems.isNotEmpty) {
-                  return Container(
-                    constraints: BoxConstraints(maxHeight: hei - 400),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: resultItems.length,
-                            itemBuilder: (context, index) {
-                              return resultItems[index];
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                  return SingleChildScrollView(
+                      child: Column(
+                    children: resultItems,
+                  ));
                 }
-                return Text("No results.");
+                return generateText("No results.");
               }
-              return Text("Loading...");
+              return generateText("Loading...");
             });
     });
   }
 }
 
+// ignore: must_be_immutable
 class ResultItemWidget extends StatelessWidget {
   final DateTime date;
   final Widget text;
-
-  const ResultItemWidget(
-    this.date,
-    this.text,
-  );
+  Function jumpToDate;
+  ResultItemWidget(this.date, this.text, this.jumpToDate, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -320,8 +308,12 @@ class ResultItemWidget extends StatelessWidget {
       title: Text(_formatDate(date)),
       subtitle: text,
       trailing: IconButton(
-        icon: Icon(Icons.arrow_forward),
-        onPressed: () {},
+        icon: const Icon(Icons.arrow_forward),
+        onPressed: () {
+          Navigator.of(context).pop();
+
+          jumpToDate(date);
+        },
       ),
     );
   }
@@ -332,38 +324,38 @@ class ResultItemWidget extends StatelessWidget {
 }
 
 RichText markup(String pretext, String text, String marker) {
-  String lowercasedText = text.toLowerCase();
-  String lowercasedMarker = marker.toLowerCase();
+  String textlower = text.toLowerCase();
+  String marklower = marker.toLowerCase();
 
   List<TextSpan> textSpans = [];
-  int index = lowercasedText.indexOf(lowercasedMarker);
+  int index = textlower.indexOf(marklower);
 
   while (index != -1) {
     textSpans.add(
       TextSpan(
         text: text.substring(0, index),
-        style: TextStyle(color: Colors.black),
+        style: const TextStyle(color: Colors.black),
       ),
     );
     textSpans.add(
       TextSpan(
         text: text.substring(index, index + marker.length),
-        style: TextStyle(
-          backgroundColor: Colors.yellow,
+        style: const TextStyle(
+          backgroundColor: Colors.redAccent,
           fontWeight: FontWeight.bold,
         ),
       ),
     );
 
     text = text.substring(index + marker.length);
-    lowercasedText = lowercasedText.substring(index + marker.length);
-    index = lowercasedText.indexOf(lowercasedMarker);
+    textlower = textlower.substring(index + marker.length);
+    index = textlower.indexOf(marklower);
   }
 
   textSpans.add(
     TextSpan(
       text: text,
-      style: TextStyle(color: Colors.black),
+      style: const TextStyle(color: Colors.black),
     ),
   );
 
@@ -378,20 +370,20 @@ RichText markup(String pretext, String text, String marker) {
 class FilterButton extends StatelessWidget {
   final String label;
   final bool selected;
-  final ValueChanged<bool> onSelected;
+  final ValueChanged<bool> isSelected;
 
   const FilterButton({
     super.key,
     required this.label,
     required this.selected,
-    required this.onSelected,
+    required this.isSelected,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        onSelected(!selected);
+        isSelected(!selected);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 5),

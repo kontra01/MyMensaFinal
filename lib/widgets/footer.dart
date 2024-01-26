@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:mymensa/widgets/mainview.dart';
+import 'package:mymensa/widgets/notifications.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'search.dart';
 import 'variables.dart';
@@ -16,11 +18,16 @@ final ButtonStyle footerButton = ElevatedButton.styleFrom(
 class FooterWidget extends StatelessWidget {
   Function dateFocusSetter;
   Function dateFocusGetter;
+  MainView mv;
   AllSchemata allSchemata;
   Id planId;
 
-  FooterWidget(
-      this.allSchemata, this.planId, this.dateFocusGetter, this.dateFocusSetter,
+  void setJumper(MainView mv) {
+    this.mv = mv;
+  }
+
+  FooterWidget(this.allSchemata, this.planId, this.dateFocusGetter,
+      this.dateFocusSetter, this.mv,
       {super.key});
 
   @override
@@ -32,7 +39,7 @@ class FooterWidget extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                _showPopUpWindow(context, SearchPopUp(allSchemata, planId));
+                _showPopUpWindow(context, SearchPopUp(allSchemata, planId, mv));
               },
               style: footerButton,
               child: const Icon(Icons.search),
@@ -47,7 +54,9 @@ class FooterWidget extends StatelessWidget {
           ),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                _showPopUpWindow(context, NotificationsWindow());
+              },
               style: footerButton,
               child: const Icon(Icons.checklist),
             ),

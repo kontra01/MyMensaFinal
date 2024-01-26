@@ -27,10 +27,18 @@ class MyMensa extends StatefulWidget {
 class _MyMensaState extends State<MyMensa> {
   int dateFocus = 0;
   AllSchemata? allSchemata;
+  late MainView mainView;
+  late FooterWidget footerWidget;
   late Directory dir;
   bool schemataAreInitialized = false;
 
   void changeContainer(int index) {}
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    footerWidget.setJumper(mainView);
+  }
 
   int dateFocusGetter() {
     return dateFocus;
@@ -43,7 +51,6 @@ class _MyMensaState extends State<MyMensa> {
   }
 
   Future<bool> initializeSchemata() async {
-    print("initialization started.");
     dir = await getApplicationDocumentsDirectory();
     if (allSchemata != null) {
       return true;
@@ -71,12 +78,14 @@ class _MyMensaState extends State<MyMensa> {
             future: initializeSchemata(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
+                mainView =
+                    MainView(allSchemata!, 1, dateFocusGetter, dateFocusSetter);
+                footerWidget = FooterWidget(allSchemata!, 1, dateFocusGetter,
+                    dateFocusSetter, mainView);
                 return Scaffold(
                     appBar: getAppBar(),
-                    body: MainView(
-                        allSchemata!, 1, dateFocusGetter, dateFocusSetter),
-                    bottomNavigationBar: FooterWidget(
-                        allSchemata!, 1, dateFocusGetter, dateFocusSetter));
+                    body: mainView,
+                    bottomNavigationBar: footerWidget);
               } else {
                 return const Center(
                   child: Text("loading..."),

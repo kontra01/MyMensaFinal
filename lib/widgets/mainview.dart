@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
+import 'package:mymensa/widgets/generates.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
 import 'storage/mealtype.dart';
 import 'storage/mensaday.dart';
@@ -22,37 +23,49 @@ List<String> weekdays = [
 
 List<List<dynamic>> styles = [];
 
+DateTime today = DateTime.now();
+String dateToString(DateTime d, int focus) {
+  return '${focus == 0 ? '${weekdays[d.weekday - 1]}, ${d.day.toString()}' : ''}. ${focus < 2 ? DateFormat('MMMM').format(DateTime(0, d.month)) : ''}${today.year == d.year ? '' : ' ${d.year}'}';
+}
+
 // ignore: must_be_immutable
 class MainView extends StatefulWidget {
   AllSchemata allSchemata;
   Id planId; // plan schema
   Function dateFocusGetter;
   Function dateFocusSetter;
+  MainViewState createdState = MainViewState();
 
   MainView(
       this.allSchemata, this.planId, this.dateFocusGetter, this.dateFocusSetter,
       {super.key});
 
   @override
-  State<MainView> createState() {
-    return _MainView();
+  State<MainView> createState() => createdState;
+
+  void jumpToDate(DateTime newDate, {int newFocus = 0}) {
+    createdState.jumpToDate(newDate, newFocus: newFocus);
   }
 }
 
-DateTime today = DateTime.now();
-String dateToString(DateTime d, int focus) {
-  return '${focus == 0 ? '${weekdays[d.weekday - 1]}, ${d.day.toString()}' : ''}. ${focus < 2 ? DateFormat('MMMM').format(DateTime(0, d.month)) : ''}${today.year == d.year ? '' : ' ${d.year}'}';
-}
-
-class _MainView extends State<MainView> {
+class MainViewState extends State<MainView> {
   late Plan plan; // plan
   late Directory dir;
   late Id planId;
   bool isInitialized = false;
   late Function appBarStateSetter;
-  List<Function> pageViewFocus;
+  List<Function> pageViewFocus = const [];
 
-  _MainView({this.pageViewFocus = const []}) {
+  late int selection; // variable that determines which slide the user is on
+  late int change;
+
+  late DateTime date; // current date. this is just helpful
+
+  // day = 0; week = 1; month = 2; year = 3;
+
+  late PageController controller; // for the sliding effect
+
+  MainViewState() {
     pageViewFocus = [
       generateViewFocusDay,
       generateViewFocusWeek,
@@ -146,22 +159,25 @@ class _MainView extends State<MainView> {
     return true;
   }
 
-  late int selection; // variable that determines which slide the user is on
-  late int change;
-
-  late DateTime date; // current date. this is just helpful
-
-  // day = 0; week = 1; month = 2; year = 3;
-
-  late PageController controller; // for the sliding effect
+  void jumpToDate(DateTime newDate, {int newFocus = 0}) {
+    selection = plan.getAccountedIndex(newDate);
+    controller
+        .animateToPage(selection,
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.fastEaseInToSlowEaseOut)
+        .then((r) {
+      appBarStateSetter(() {
+        date = newDate;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    print("checking...");
     if (isInitialized) {
       return buildLoaded(context);
     } else {
-      return const Text('Loading...');
+      return generateText('Loading...');
     }
   }
 
@@ -188,12 +204,12 @@ class _MainView extends State<MainView> {
             Expanded(
               child: PageView.builder(
                   controller: controller,
-                  onPageChanged: (index) async {
+                  onPageChanged: (index) {
                     change = index - selection;
+                    selection = index;
                     appBarStateSetter(() {
                       date = scrollDate(change, widget.dateFocusGetter());
                     });
-                    selection = index;
                   },
                   itemBuilder: (context, pageIndex) {
                     return FutureBuilder<Widget>(
@@ -203,7 +219,7 @@ class _MainView extends State<MainView> {
                           if (snapshot.hasData) {
                             return snapshot.data!;
                           }
-                          return Text("loading...");
+                          return generateText("loading...");
                         });
                   }),
             )
@@ -217,15 +233,15 @@ class _MainView extends State<MainView> {
         : (await widget.allSchemata.mensadaySchema.mensaDays
             .get(plan[pageIndex]!));
     if (currentMensaDay == null) {
-      return const Text("No meals entered for this date.");
+      return generateText("No meals entered for this date.");
     }
     List<Id>? currentTypes = currentMensaDay.mealTypes;
     if (currentTypes.isEmpty) {
-      return const Text("No meals entered for this date.");
+      return generateText("No meals entered for this date.");
     }
     // THIS PART IS THE ACTUAL BOXES
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.0),
+        margin: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: joinWidgetList(
               currentTypes
@@ -266,7 +282,7 @@ class _MainView extends State<MainView> {
           return Column(
             children: [
               Container(
-                color: Colors.blue,
+                color: Colors.redAccent,
                 padding: const EdgeInsets.all(14.0),
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -296,7 +312,7 @@ class _MainView extends State<MainView> {
           if (snapshot.hasData) {
             Meal? meal = snapshot.data;
             if (meal == null) {
-              return const Text("No meals entered for this date.");
+              return generateText("No meals entered for this date.");
             }
             return ListTile(
               title: Text(meal.name),
@@ -304,13 +320,6 @@ class _MainView extends State<MainView> {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    // Edit button
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      // TODO: create plan and interface for editing.
-                    },
-                  ),
                   IconButton(
                     // Rate button
                     icon: const Icon(Icons.star),
@@ -322,7 +331,7 @@ class _MainView extends State<MainView> {
               ),
             );
           } else {
-            return const Text('No meal details available');
+            return generateText('No meal details available');
           }
         },
       );
