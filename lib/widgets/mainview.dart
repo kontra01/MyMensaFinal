@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:mymensa/widgets/generates.dart';
 import 'package:mymensa/widgets/storage/allSchemata.dart';
+import 'package:mymensa/widgets/storage/json_util.dart';
 import 'storage/mealtype.dart';
 import 'storage/mensaday.dart';
 import 'storage/plan.dart';
@@ -24,7 +25,7 @@ List<String> weekdays = [
 
 List<List<dynamic>> styles = [];
 
-DateTime today = DateTime.now();
+DateTime today = DateUtils.dateOnly(DateTime.now());
 String dateToString(DateTime d, int focus) {
   return '${focus == 0 ? '${weekdays[d.weekday - 1]}, ${d.day.toString()}' : ''}. ${focus < 2 ? DateFormat('MMMM').format(DateTime(0, d.month)) : ''}${today.year == d.year ? '' : ' ${d.year}'}';
 }
@@ -50,19 +51,15 @@ class MainView extends StatefulWidget {
 }
 
 class MainViewState extends State<MainView> {
-  late Plan plan; // plan
   late Directory dir;
   late Id planId;
+  late AllSchemata allSchemata;
+  late Function dateFocusGetter;
   bool isInitialized = false;
   late Function appBarStateSetter;
   List<Function> pageViewFocus = const [];
-
-  late int selection; // variable that determines which slide the user is on
-  late int change;
-
-  late DateTime date; // current date. this is just helpful
-
-  // day = 0; week = 1; month = 2; year = 3;
+  late DateTime date;
+  late int selected;
 
   late PageController controller; // for the sliding effect
   TextEditingController descriptionController = TextEditingController();
@@ -81,16 +78,18 @@ class MainViewState extends State<MainView> {
   void initState() {
     super.initState();
     planId = widget.planId;
-    change = 0;
+    allSchemata = widget.allSchemata;
+    dateFocusGetter = widget.dateFocusGetter;
     if (!isInitialized) {
-      initialize().then((r) {
-        if (r) {
-          int futureIndex = plan.getClosestFutureDay(today);
-          date = plan.getAccountedDate(futureIndex);
-          selection = futureIndex;
-          controller = PageController(initialPage: selection);
+      initialize().then((r) async {
+        Plan? plan = await getPlan();
+        if (r && plan != null) {
+          selected = plan.getClosestFutureDay(today);
+          updatePlan(plan);
+          date = plan.getAccountedDate(selected);
+          controller = PageController(initialPage: selected);
         } else {
-          // error
+          // error... never comes up though.
         }
         setState(() {
           isInitialized = true;
@@ -105,67 +104,44 @@ class MainViewState extends State<MainView> {
     super.dispose();
   }
 
+  // this function is mainly constructed for data generating. this would have different logics
   Future<bool> initialize() async {
-    await widget.allSchemata.mealSchema.writeTxn(() async {
-      await widget.allSchemata.mealSchema.meals.clear();
-      await widget.allSchemata.mealSchema.meals.putAll([
-        Meal("Gebratener Reis", 3.5),
-        Meal("Bohnensuppe", 4),
-        Meal("Spinat-Quiche", 4.5),
-        Meal("Tomatensalat", 2.5),
-        Meal("Kirschkuchen", 3),
-        Meal("Pasta Alio Olio", 4.5)
-      ]);
-    });
-    // MT(name, mealId, typus, hours, minutes)
-    // -> typus is yet to be defined and so on.
-    MealType mt1 = MealType("Prima Klima", [1], 0, 13, 0);
-    MealType mt2 = MealType("Sattmacher", [2], 0, 13, 0);
-    MealType mt3 = MealType("Topf + Pfanne", [6], 0, 13, 0);
-    MealType mt4 = MealType("Beilagen", [4], 0, 13, 0);
-    MealType mt5 = MealType("Desserts", [5], 0, 13, 30);
-    MealType mt6 = MealType("Prima Klima", [3], 0, 13, 0);
-    await widget.allSchemata.mealtypeSchema.writeTxn(() async {
-      await widget.allSchemata.mealtypeSchema.mealTypes.clear();
-      await widget.allSchemata.mealtypeSchema.mealTypes
-          .putAll([mt1, mt2, mt3, mt4, mt5, mt6]);
-    });
-
-    // the following is mostly for default data generating
-    await widget.allSchemata.planSchema.writeTxn(() async {
-      await widget.allSchemata.planSchema.plans.clear();
-    });
-    Plan? planT = await widget.allSchemata.planSchema.plans.get(planId);
-    if (planT == null) {
-      MensaDay md1 = MensaDay(DateTime.utc(2024, 1, 14), mealTypes: [mt1.id]);
-      MensaDay md2 =
-          MensaDay(DateTime.utc(2024, 1, 15), mealTypes: [mt1.id, mt4.id]);
-      MensaDay md3 = MensaDay(DateTime.utc(2024, 1, 18), mealTypes: [mt2.id]);
-      MensaDay md4 =
-          MensaDay(DateTime.utc(2024, 1, 19), mealTypes: [mt3.id, mt5.id]);
-      MensaDay md5 =
-          MensaDay(DateTime.utc(2024, 1, 20), mealTypes: [mt6.id, mt4.id]);
-
-      await widget.allSchemata.mensadaySchema.writeTxn(() async {
-        await widget.allSchemata.mensadaySchema.mensaDays.clear();
-        await widget.allSchemata.mensadaySchema.mensaDays
-            .putAll([md1, md2, md3, md4, md5]);
-      });
-      plan = Plan();
-      plan.addAll([md1, md2, md3, md4, md5]);
-      await widget.allSchemata.planSchema.writeTxn(() async {
-        await widget.allSchemata.planSchema.plans.put(plan);
-      });
-    } else {
-      plan = planT;
+    if (await allSchemata.planSchema.plans.get(planId) != null) {
+      return true;
     }
+    await allSchemata.planSchema.writeTxn(() async {
+      await allSchemata.planSchema.plans.clear();
+    });
+    await allSchemata.mealSchema.writeTxn(() async {
+      await allSchemata.mealSchema.meals.clear();
+    });
+    await allSchemata.mealtypeSchema.writeTxn(() async {
+      await allSchemata.mealtypeSchema.mealTypes.clear();
+    });
+    await allSchemata.mensadaySchema.writeTxn(() async {
+      await allSchemata.mensadaySchema.mensaDays.clear();
+    });
+
+    await loadJSON(allSchemata, planId);
     return true;
   }
 
-  void jumpToDate(DateTime newDate, {int newFocus = 0}) {
-    selection = plan.getAccountedIndex(newDate);
+  Future<Plan?> getPlan() async {
+    return await allSchemata.planSchema.plans.get(planId);
+  }
+
+  Future<bool> updatePlan(Plan updatedPlan) async {
+    await allSchemata.planSchema.writeTxn(() async {
+      await allSchemata.planSchema.plans.put(updatedPlan);
+    });
+    return true;
+  }
+
+  void jumpToDate(DateTime newDate, {int newFocus = 0}) async {
+    Plan? plan = await getPlan();
+    if (plan == null) return;
     controller
-        .animateToPage(selection,
+        .animateToPage(plan.getAccountedIndex(newDate),
             duration: const Duration(milliseconds: 1000),
             curve: Curves.fastEaseInToSlowEaseOut)
         .then((r) {
@@ -198,7 +174,7 @@ class MainViewState extends State<MainView> {
           title: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               appBarStateSetter = setState;
-              return Text(dateToString(date, widget.dateFocusGetter()));
+              return Text(dateToString(date, dateFocusGetter()));
             },
           ),
         ),
@@ -208,16 +184,15 @@ class MainViewState extends State<MainView> {
               child: PageView.builder(
                   controller: controller,
                   onPageChanged: (index) {
-                    change = index - selection;
-                    selection = index;
+                    int change = index - selected;
                     appBarStateSetter(() {
-                      date = scrollDate(change, widget.dateFocusGetter());
+                      date = scrollDate(change, dateFocusGetter());
                     });
+                    selected = index;
                   },
                   itemBuilder: (context, pageIndex) {
                     return FutureBuilder<Widget>(
-                        future:
-                            pageViewFocus[widget.dateFocusGetter()](pageIndex),
+                        future: pageViewFocus[dateFocusGetter()](pageIndex),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return snapshot.data!;
@@ -231,15 +206,17 @@ class MainViewState extends State<MainView> {
   }
 
   Future<Widget> generateViewFocusDay(pageIndex) async {
+    Plan? plan = await getPlan();
+    if (plan == null) {
+      return generateText("No Plan present.");
+    }
     MensaDay? currentMensaDay = plan[pageIndex] == null
         ? null
-        : (await widget.allSchemata.mensadaySchema.mensaDays
-            .get(plan[pageIndex]!));
+        : (await allSchemata.mensadaySchema.mensaDays.get(plan[pageIndex]!));
     if (currentMensaDay == null) {
       return generateText("No meals entered for this date.");
     }
-    print(currentMensaDay.date);
-    List<Id>? currentTypes = currentMensaDay.mealTypes;
+    List<Id> currentTypes = currentMensaDay.mealTypes;
     if (currentTypes.isEmpty) {
       return generateText("No meals entered for this date.");
     }
@@ -280,7 +257,7 @@ class MainViewState extends State<MainView> {
 
   Widget generateTypeBox(Id mealTypeId) {
     return FutureBuilder<MealType?>(
-      future: widget.allSchemata.mealtypeSchema.mealTypes.get(mealTypeId),
+      future: allSchemata.mealtypeSchema.mealTypes.get(mealTypeId),
       builder: (BuildContext context, AsyncSnapshot<MealType?> snapshot) {
         if (snapshot.hasData && snapshot.data != null) {
           return Column(
@@ -365,13 +342,20 @@ class MainViewState extends State<MainView> {
                                               padding: const EdgeInsets.all(8),
                                               child: ElevatedButton(
                                                 child: const Text('Submit'),
-                                                onPressed: () {
+                                                onPressed: () async {
                                                   String descr =
                                                       descriptionController
                                                           .text;
                                                   meal.setDesription(descr);
-                                                  dbInsert(meal);
-                                                  Navigator.of(context).pop();
+                                                  await widget
+                                                      .allSchemata.mealSchema
+                                                      .writeTxn(() async {
+                                                    await allSchemata
+                                                        .mealSchema.meals
+                                                        .put(meal);
+                                                  }).then((r) {
+                                                    Navigator.of(context).pop();
+                                                  });
                                                   /* if (_formKey.currentState!.validate()) {
                                           _formKey.currentState!.save();
                                         } */
@@ -429,13 +413,21 @@ class MainViewState extends State<MainView> {
                                               padding: const EdgeInsets.all(8),
                                               child: ElevatedButton(
                                                 child: const Text('Submit'),
-                                                onPressed: () {
+                                                onPressed: () async {
                                                   int rating = int.parse(
                                                       ratingController.text);
                                                   meal.setRating(rating);
-                                                  dbInsert(meal);
-                                                  subtitleSetter(() {});
-                                                  Navigator.of(context).pop();
+                                                  await widget
+                                                      .allSchemata.mealSchema
+                                                      .writeTxn(() async {
+                                                    await allSchemata
+                                                        .mealSchema.meals
+                                                        .put(meal);
+                                                  }).then((r) {
+                                                    subtitleSetter(() {});
+                                                    Navigator.of(context).pop();
+                                                  });
+
                                                   /* if (_formKey.currentState!.validate()) {
                                                   _formKey.currentState!.save();
                                                 } */
@@ -464,16 +456,9 @@ class MainViewState extends State<MainView> {
 
   Future<Meal?> getMeal(Id mealId) async {
     try {
-      return await widget.allSchemata.mealSchema.meals.get(mealId);
+      return await allSchemata.mealSchema.meals.get(mealId);
     } catch (e) {
       return null;
     }
-  }
-
-  void dbInsert(Meal meal) async {
-    await widget.allSchemata.mealSchema.writeTxn(() async {
-      await widget.allSchemata.mealSchema.meals
-          .put(meal); // update meal. await ?, isar? ...
-    });
   }
 }

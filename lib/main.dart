@@ -7,6 +7,7 @@ import 'widgets/footer.dart';
 import 'widgets/mainview.dart';
 import 'widgets/variables.dart';
 
+// HOT RELOAD DOESNT WORK WITH THE SEARCH, USE HOT RESTART.
 void main() {
   runApp(const MyMensa());
 }

@@ -75,74 +75,76 @@ class _SearchPopUp extends State<SearchPopUp> {
             child: SizedBox(
               width: wid - 2 * border,
               height: hei,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    child: FutureBuilder<Plan?>(
-                        future: widget.allSchemata.planSchema.plans
-                            .get(widget.planId),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: searchController,
-                                        onChanged: (query) {
-                                          updateSearchItems(
-                                              query, snapshot.data);
-                                        },
-                                        decoration: const InputDecoration(
-                                          hintText: 'Enter search...',
+              child: ListView(shrinkWrap: true, children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FutureBuilder<Plan?>(
+                          future: widget.allSchemata.planSchema.plans
+                              .get(widget.planId),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: searchController,
+                                          onChanged: (query) {
+                                            updateSearchItems(
+                                                query, snapshot.data);
+                                          },
+                                          decoration: const InputDecoration(
+                                            hintText: 'Enter search...',
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.filter_list),
-                                      onPressed: () {
-                                        setState(() {
-                                          showFilterOptions =
-                                              !showFilterOptions;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                if (showFilterOptions) ...[
-                                  const SizedBox(height: 12.0),
-                                  Wrap(
-                                    spacing: 8.0,
-                                    runSpacing: 8.0,
-                                    children: [
-                                      for (var entry in filterOptions.entries)
-                                        FilterButton(
-                                          label: entry.key,
-                                          selected: entry.value,
-                                          isSelected: (selected) {
-                                            setState(() {
-                                              filterOptions[entry.key] =
-                                                  selected;
-                                            });
-                                          },
-                                        ),
+                                      IconButton(
+                                        icon: const Icon(Icons.filter_list),
+                                        onPressed: () {
+                                          setState(() {
+                                            showFilterOptions =
+                                                !showFilterOptions;
+                                          });
+                                        },
+                                      ),
                                     ],
                                   ),
+                                  if (showFilterOptions) ...[
+                                    const SizedBox(height: 12.0),
+                                    Wrap(
+                                      spacing: 8.0,
+                                      runSpacing: 8.0,
+                                      children: [
+                                        for (var entry in filterOptions.entries)
+                                          FilterButton(
+                                            label: entry.key,
+                                            selected: entry.value,
+                                            isSelected: (selected) {
+                                              setState(() {
+                                                filterOptions[entry.key] =
+                                                    selected;
+                                              });
+                                            },
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                  const SizedBox(height: 8.0),
+                                  Flexible(child: searchResults)
                                 ],
-                                const SizedBox(height: 8.0),
-                                Flexible(child: searchResults)
-                              ],
-                            );
-                          }
-                          return const Text("loading...");
-                        }),
-                  )
-                ],
-              ),
+                              );
+                            }
+                            return const Text("loading...");
+                          }),
+                    )
+                  ],
+                )
+              ]),
             ),
           ),
         ),
@@ -213,7 +215,6 @@ class _SearchPopUp extends State<SearchPopUp> {
                     possibleMealIds.add(m.id);
                   }
                 }
-                print(possibleMealIds);
               }
               if (filterOptions['Categories']!) {
                 // To be worked on
@@ -225,7 +226,6 @@ class _SearchPopUp extends State<SearchPopUp> {
                   continue;
                 }
                 bool? matchesDate;
-
                 if (filterOptions['Dates']!) {
                   matchesDate = queryMatchesDate(query, md.date);
                 }

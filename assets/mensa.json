@@ -2,7 +2,7 @@
     "name": "THU_MENSA",
     "Days": [
         {
-            "date": "2024-01-27",
+            "date": "2024-01-29",
             "mealTypes": [
                 {
                     "name": "Primaklima",
@@ -43,13 +43,13 @@
             ]
         },
         {
-            "date": "2024-01-29",
+            "date": "2024-01-30",
             "mealTypes": [
                 {
                     "name": "Primaklima",
                     "meals": [
                         {
-                            "name": "Gemüsebällchen  auf Tomatenspaghetti",
+                            "name": "Gemüsebällchen auf Tomatenspaghetti",
                             "price": 4.65
                         }
                     ]
@@ -82,6 +82,76 @@
                         ]
                     }
             ]
+        },
+        {
+            "date": "2024-01-31",
+            "mealTypes": [
+                    {
+                    "name": "Primaklima",
+                    "meals": [
+                        {
+                            "name": "Bratkartoffeln mit Schnittlauch-Quark",
+                            "price": 3.5
+                        }
+                    ]
+                    },
+                    {
+                        "name": "Fleisch + Fisch",
+                        "meals": [
+                            {
+                                "name": "Rinderbratwurst mit Käsespätzle",
+                                "price": 4.8
+                            }
+                        ]
+                    }
+            ]
+        },
+        {
+            "date": "2024-02-01",
+            "mealTypes": [
+                    {
+                    "name": "Primaklima",
+                    "meals": [
+                        {
+                            "name": "Ratatouille",
+                            "price": 3.9
+                        }
+                    ]
+                    },
+                    {
+                        "name": "Sattmacher",
+                        "meals": [
+                            {
+                                "name": "Japanisch gebratener Eierreis",
+                                "price": 4.0
+                            }
+                        ]
+                    }
+            ]
+        },
+        {
+            "date": "2024-02-02",
+            "mealTypes": [
+                    {
+                    "name": "Topf + Pfanne",
+                    "meals": [
+                        {
+                            "name": "Spaghetti Alio Olio",
+                            "price": 4.5
+                        }
+                    ]
+                    },
+                    {
+                        "name": "Dessert",
+                        "meals": [
+                            {
+                                "name": "Kirschkuchen mit Sahne",
+                                "price": 3.2
+                            }
+                        ]
+                    }
+            ]
         }
+
     ]
   }

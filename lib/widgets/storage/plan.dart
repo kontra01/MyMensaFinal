@@ -93,16 +93,14 @@ class Plan {
   }
 
   void expand(int index) {
-    int expansion = index - indices.length + 1;
-
-    if (expansion >= 0 && expansion < indices.length) return;
+    if (index >= 0 && index < indices.length) return;
 
     if (index < 0 && !date0isNull()) {
       date0 = DateTime(date0.year, date0.month, date0.day + index);
     }
 
-    indices.insertAll(index < 0 ? 0 : indices.length,
-        List<Id>.generate(expansion.abs(), (i) => -1));
+    List<Id> minusList = List<Id>.generate(index.abs(), (i) => -1);
+    indices = index < 0 ? (minusList + indices) : (indices + minusList);
   }
 
   void addAll([List<MensaDay> mensaDays = const []]) {
@@ -114,7 +112,7 @@ class Plan {
   List<Id> getAllNonNulls() {
     List<Id> nonNulls = [];
     for (int d = 0; d < indices.length; d++) {
-      if (this[d] != null) nonNulls.add(d);
+      if (this[d] != null) nonNulls.add(this[d]!);
     }
     return nonNulls;
   }
@@ -126,7 +124,8 @@ class Plan {
     if (iD < 0) {
       expand(iD);
       iD = 0;
+      return getUpperNonNull(iD) ?? iD;
     }
-    return getUpperNonNull(iD) ?? iD;
+    return getUpperNonNull(iD - 1) ?? iD;
   }
 }

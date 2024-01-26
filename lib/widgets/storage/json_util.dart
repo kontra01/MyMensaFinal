@@ -13,10 +13,9 @@ Future<Map> readJson() async {
   return data;
 }
 
-Future<Plan> loadJSON(AllSchemata allSchemata, Id planId) async {
+Future<Id> loadJSON(AllSchemata allSchemata, Id planId) async {
   // https://github.com/isar/isar/discussions/256
-  Plan? plan = await allSchemata.planSchema.plans.get(planId);
-  plan ??= Plan();
+  Plan plan = await allSchemata.planSchema.plans.get(planId) ?? Plan();
   Map data = await readJson();
   DateTime date;
   int typus = 0;
@@ -25,8 +24,7 @@ Future<Plan> loadJSON(AllSchemata allSchemata, Id planId) async {
 
   final days = data["Days"];
   for (var day in days) {
-    date = dateHelper(day["date"]).add(const Duration(days: 1));
-    print(date);
+    date = dateHelper(day["date"]);
     List<Id> mealTypeIds = [];
 
     for (var mealType in day["mealTypes"]) {
@@ -55,37 +53,10 @@ Future<Plan> loadJSON(AllSchemata allSchemata, Id planId) async {
     plan.add(md);
   }
   await allSchemata.planSchema.writeTxn(() async {
-    await allSchemata.planSchema.plans.put(plan!);
+    await allSchemata.planSchema.plans.put(plan);
   });
 
-  return plan;
-}
-
-void dbInsert(Isar mealSchema, Meal meal) async {
-  //short version
-  /* await isar.writeTxn(() async {
-      await isar!.meals.put(meal); // update meal. await ?, isar? ...
-
-    }); */
-  // long version: Incoming price, existing rating, description
-  await mealSchema.writeTxn(() async {
-    Meal? mealDB = await mealSchema.meals.get(meal.getId());
-    mealDB ??= meal;
-    String name = meal.name;
-    mealDB.setPrice(meal.getPrice());
-    //await isar?.meals.delete(meal.getId());
-    //mealDB!.setRating(meal.getRating());
-    //mealDB.setDesription(meal.getDescription());
-    await mealSchema.meals.put(meal);
-  });
-
-  //setState(() {});
-}
-
-void dbInsertPlan(Isar planSchema, Plan plan) async {
-  await planSchema.writeTxn(() async {
-    await planSchema.plans.put(plan);
-  });
+  return plan.id;
 }
 
 DateTime dateHelper(String dateStr) {
