@@ -19,7 +19,7 @@ class AllSchemata {
     try {
       await schema?.close();
     } catch (e) {
-      print(e);
+      return false;
     }
     return true;
   }
@@ -40,7 +40,6 @@ class AllSchemata {
     try {
       schemaVar = await Isar.open(schema, directory: dir.path, name: name);
     } catch (e) {
-      print("Error opening schema: $e");
       return;
     }
   }

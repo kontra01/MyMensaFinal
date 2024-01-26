@@ -1,0 +1,14 @@
+Generate an APK with:
+(if errors, first:
+
+> flutter clean
+> flutter pub get
+
+)
+
+> flutter build apk
+
+
+and directly install it by connecting a phone and:
+
+> flutter install
